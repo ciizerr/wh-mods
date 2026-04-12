@@ -9,46 +9,74 @@
 // @compilerOptions -lgdiplus -lwinmm -lgdi32
 // ==/WindhawkMod==
 
+// ==WindhawkModReadme==
+/*
+# 🐱 Neko Cat - Your New Desktop Companion
+Bring the classic 90s desktop pet back to life! Neko is a playful cat that lives on your desktop, roams over your windows, and interacts with your mouse.
+
+## 🎮 How to Interact
+*   **Left-Click:** Cycles through Neko's **5 active behaviors** (see below). Each click changes his mood!
+*   **Right-Click:** Wakes Neko up instantly if he is sleeping.
+*   **Drag & Drop:** Use your mouse to move Neko anywhere. Dropping him forces him into a deep sleep.
+
+## 🏃 Cat Behaviors
+1.  **Chase Mouse:** (Default) He follows you everywhere!
+2.  **Run Away:** Try to catch him if you can!
+3.  **Random:** He's got the zoomies!
+4.  **Pace:** He patrols the edges of your screen.
+5.  **Run Around:** He chases an invisible bouncing ball.
+*   **Forced Sleep:** Need him to stay put? Just **drag and drop** him anywhere. He'll yawn and fall into a deep sleep until you **Right-Click** him to wake him up.
+*   **Sound Themes:** Choose between different meow and sleep sound sets (Default, Memes, Cute).
+*   **Zero Configuration:** All assets (sprites and sounds) are automatically downloaded from GitHub on the first run.
+
+## ⚙️ Customization
+Adjust the **Scale** to make him tiny or giant, change his **Speed**, or set the **Sleep Sound Interval** to your liking in the mod settings.
+
+Enjoy your new feline friend!
+
+## 💬 Feedback & Support
+For bug reports, feature suggestions, or general feedback, please reach out via:
+*   **Discord:** `ciizerr`
+*   **GitHub:** [wh-mods](https://github.com/ciizerr/wh-mods)
+*/
+// ==/WindhawkModReadme==
+
 // ==WindhawkModSettings==
 /*
-- asset_path: D:\wh-mods\assets\neko-cat
-  $name: Asset Path
-  $description: Path to the neko-cat folder
 - scale: 2
   $name: Cat Scale
-  $description: Size multiplier of the cat (1 = 32px, 2 = 64px, etc.)
+  $description: Adjust the overall size of the cat on your screen. 1 is original pixel-art size (32px), 2 is standard (64px). Large values are great for 4K monitors!
 - speed: 24
-  $name: Speed
-  $description: Cat's movement speed per tick
+  $name: Movement Speed
+  $description: Controls how fast Neko sprints across your desktop. A higher value makes him much more energetic and quick to follow your mouse.
 - sound: true
   $name: Enable Sound
-  $description: Enable cat meows and sleeping sounds
+  $description: Toggle all audio. When enabled, Neko will meow when clicked, purr when idle, and snore while sleeping.
 - sound_theme: default
   $name: Sound Theme
-  $description: Folder to pull sounds from (assets/neko-cat/sounds/[Theme]/...)
+  $description: Choose the 'personality' of your cat! This selects which set of audio files to use for meows and snores.
   $options:
-  - default: Default
-  - memes: Memes
-  - cute: Cute
+  - default: Original Neko
+  - memes: Fun & Silly (coming soon..)
+  - cute: Kawaii Meows (coming soon..)
 - sleep_sound_interval: 30
-  $name: Sleep Sound Interval
-  $description: Seconds between sleep snoring sounds
+  $name: Sleep Snore Interval
+  $description: The amount of time (in seconds) Neko waits between his sleepy snoring sounds. Ignored if repetition is disabled.
+- sleep_sound_repeat: true
+  $name: Repeat Sleep Sound
+  $description: When enabled, Neko snores periodically while asleep. Disable to make him snore only once when he first falls asleep.
 - fps: 60
-  $name: Target FPS
-  $description: Framerate (for smooth movement)
+  $name: Fluidity (FPS)
+  $description: The smoothness of the cat's movement. 60 FPS is recommended for buttery-smooth animations, but can be lowered to 30 to save battery/CPU.
 */
 // ==/WindhawkModSettings==
+
 
 #include <windows.h>
 #include <gdiplus.h>
 #include <mmsystem.h>
 #include <string>
-#include <vector>
 #include <cmath>
-
-#pragma comment(lib, "gdiplus.lib")
-#pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "gdi32.lib")
 
 using namespace Gdiplus;
 
@@ -71,12 +99,13 @@ const int CLAW_TIME = 10;
 
 const int SPRITE_SIZE = 32;
 
-std::wstring g_assetPath = L"D:\\wh-mods\\assets\\neko-cat";
+std::wstring g_assetPath = L"";
 std::wstring g_soundTheme = L"default";
 int g_scale = 2;
 int g_speed = 24;
 bool g_soundEnabled = true;
 int g_sleepSoundInterval = 30;
+bool g_sleepSoundRepeat = true;
 int g_fps = 60;
 bool g_modExit = false;
 
@@ -105,10 +134,54 @@ SpriteConfig g_spriteConfigs[MAX_STATE] = {
     { L"rightclaw1.png", L"rightclaw2.png" }, // R_CLAW
 };
 
+void CreatePath(std::wstring path) {
+    size_t pos = 0;
+    while ((pos = path.find_first_of(L"\\/", pos + 1)) != std::wstring::npos) {
+        std::wstring dir = path.substr(0, pos);
+        CreateDirectoryW(dir.c_str(), NULL);
+    }
+    CreateDirectoryW(path.c_str(), NULL);
+}
+
+bool EnsureFileExists(const std::wstring& localPath, const std::wstring& remoteUrl) {
+    if (GetFileAttributesW(localPath.c_str()) != INVALID_FILE_ATTRIBUTES) return true;
+    
+    WH_GET_URL_CONTENT_OPTIONS opt = { sizeof(WH_GET_URL_CONTENT_OPTIONS), localPath.c_str() };
+    const WH_URL_CONTENT* content = Wh_GetUrlContent(remoteUrl.c_str(), &opt);
+    if (!content) return false;
+    
+    bool ok = (content->statusCode == 200 || content->statusCode == 0);
+    Wh_FreeUrlContent(content);
+    if (!ok) DeleteFileW(localPath.c_str());
+    return ok;
+}
+
+void DownloadMissingAssets() {
+    CreatePath(g_assetPath);
+    CreatePath(g_assetPath + L"\\sounds\\" + g_soundTheme);
+
+    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/neko-cat/";
+
+    for (int i = 0; i < MAX_STATE; i++) {
+        for (int f = 0; f < 2; f++) {
+            std::wstring file = g_spriteConfigs[i].files[f];
+            EnsureFileExists(g_assetPath + L"\\" + file, baseUrl + file);
+        }
+    }
+    
+    if (g_soundTheme == L"default") {
+        const wchar_t* audios[] = { L"awake.wav", L"sleep.wav", L"idle1.wav", L"idle2.wav", L"idle3.wav" };
+        for (const wchar_t* au : audios) {
+            std::wstring file(au);
+            EnsureFileExists(g_assetPath + L"\\sounds\\default\\" + file, baseUrl + L"sounds/default/" + file);
+        }
+    }
+}
+
 class Neko {
 public:
     HWND hwnd = NULL;
-    Bitmap* sprites[MAX_STATE][2] = {0};
+    Bitmap* sprites[MAX_STATE][2] = {};
 
     int behaviorMode = CHASE_MOUSE;
     int idleThreshold = 6;
@@ -139,7 +212,7 @@ public:
 
     bool isDragging = false;
     ULONGLONG lastSleepSoundTime = 0;
-    int sleepSoundPlayCount = 0;
+    bool hasPlayedSleepSound = false;
 
     void LoadSprites() {
         for (int i = 0; i < MAX_STATE; i++) {
@@ -174,7 +247,7 @@ public:
         
         LoadSprites();
 
-        WNDCLASSW wc = {0};
+        WNDCLASSW wc = {};
         wc.lpfnWndProc = NekoWndProc;
         wc.hInstance = GetModuleHandle(NULL);
         wc.lpszClassName = L"NekoCatLayeredWnd";
@@ -313,16 +386,21 @@ public:
 
         if (state == SLEEP) {
             ULONGLONG now = GetTickCount64();
-            if (now - lastSleepSoundTime > (ULONGLONG)g_sleepSoundInterval * 1000) {
+            bool shouldPlay = false;
+            if (!g_sleepSoundRepeat) {
+                if (!hasPlayedSleepSound) {
+                    shouldPlay = true;
+                    hasPlayedSleepSound = true;
+                }
+            } else if (now - lastSleepSoundTime > (ULONGLONG)g_sleepSoundInterval * 1000) {
+                shouldPlay = true;
+            }
+
+            if (shouldPlay) {
                 PlayAudio(L"sleep.wav", false);
                 lastSleepSoundTime = now;
-                sleepSoundPlayCount = 1;
-            } else if (sleepSoundPlayCount == 1 && now - lastSleepSoundTime > 3000) {
-                PlayAudio(L"sleep.wav", false);
-                sleepSoundPlayCount = 2; // done until next interval
             }
         } else {
-            sleepSoundPlayCount = 0;
             // random chance to purr/idle noise
             if ((state == STOP || state == WASH) && g_soundEnabled && rand() % 50 == 0) {
                 const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" };
@@ -337,7 +415,7 @@ public:
 
     void ChaseMouse() {
         if (!hasMouseMoved) {
-            RunTowards(logicX + SPRITE_SIZE * g_scale / 2, logicY + SPRITE_SIZE * g_scale);
+            RunTowards(logicX + SPRITE_SIZE * g_scale / 2.0, logicY + SPRITE_SIZE * g_scale);
             return;
         }
         RunTowards(mouseX, mouseY);
@@ -345,12 +423,12 @@ public:
 
     void RunAwayFromMouse() {
         if (!hasMouseMoved) {
-            RunTowards(logicX + SPRITE_SIZE * g_scale / 2, logicY + SPRITE_SIZE * g_scale);
+            RunTowards(logicX + SPRITE_SIZE * g_scale / 2.0, logicY + SPRITE_SIZE * g_scale);
             return;
         }
         int dwLimit = idleThreshold * 16 * g_scale;
-        double xdiff = logicX + SPRITE_SIZE * g_scale / 2 - mouseX;
-        double ydiff = logicY + SPRITE_SIZE * g_scale / 2 - mouseY;
+        double xdiff = logicX + SPRITE_SIZE * g_scale / 2.0 - mouseX;
+        double ydiff = logicY + SPRITE_SIZE * g_scale / 2.0 - mouseY;
         
         if (abs(xdiff) < dwLimit && abs(ydiff) < dwLimit) {
             double dLength = sqrt(xdiff * xdiff + ydiff * ydiff);
@@ -420,6 +498,9 @@ public:
     void SetState(NekoState newState) {
         if (state == SLEEP && newState != SLEEP) {
             StopAudio();
+        }
+        if (newState == SLEEP && state != SLEEP) {
+            hasPlayedSleepSound = false;
         }
 
         tickCount = 0;
@@ -536,10 +617,24 @@ public:
         }
     }
 
+    double lastUpdateX = -999, lastUpdateY = -999;
+    int lastUpdateFrame = -1;
+    NekoState lastUpdateState = MAX_STATE;
+    int lastUpdateScale = -1;
+
     void UpdateWindowPosition() {
         int frameObj = 0;
         if (state == SLEEP) frameObj = (tickCount >> 2) & 1;
         else frameObj = tickCount & 1;
+
+        if (lastUpdateX == x && lastUpdateY == y && lastUpdateFrame == frameObj && lastUpdateState == state && lastUpdateScale == g_scale) {
+            return;
+        }
+        lastUpdateX = x;
+        lastUpdateY = y;
+        lastUpdateFrame = frameObj;
+        lastUpdateState = state;
+        lastUpdateScale = g_scale;
 
         Bitmap* bmp = sprites[state][frameObj];
         if (!bmp || bmp->GetLastStatus() != Ok) return;
@@ -549,7 +644,7 @@ public:
         int outSize = SPRITE_SIZE * g_scale;
 
         HBITMAP hbmMem;
-        BITMAPINFO bi = {0};
+        BITMAPINFO bi = {};
         bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         bi.bmiHeader.biWidth = outSize;
         bi.bmiHeader.biHeight = -outSize;
@@ -603,6 +698,8 @@ DWORD WINAPI NekoThread(LPVOID param) {
     ULONG_PTR gdiplusToken;
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    DownloadMissingAssets();
+
     g_pNeko = new Neko();
     g_pNeko->Init();
 
@@ -638,9 +735,10 @@ DWORD WINAPI NekoThread(LPVOID param) {
 HANDLE hThread = NULL;
 
 void LoadSettings() {
-    PCWSTR pszPath = Wh_GetStringSetting(L"asset_path");
-    g_assetPath = pszPath;
-    Wh_FreeStringSetting(pszPath);
+    WCHAR storagePath[MAX_PATH];
+    if (Wh_GetModStoragePath(storagePath, ARRAYSIZE(storagePath))) {
+        g_assetPath = storagePath;
+    }
 
     PCWSTR pszTheme = Wh_GetStringSetting(L"sound_theme");
     g_soundTheme = pszTheme;
@@ -650,6 +748,7 @@ void LoadSettings() {
     g_speed = Wh_GetIntSetting(L"speed");
     g_soundEnabled = Wh_GetIntSetting(L"sound") != 0;
     g_sleepSoundInterval = Wh_GetIntSetting(L"sleep_sound_interval");
+    g_sleepSoundRepeat = Wh_GetIntSetting(L"sleep_sound_repeat") != 0;
     g_fps = Wh_GetIntSetting(L"fps");
 }
 
