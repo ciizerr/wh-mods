@@ -1,0 +1,64 @@
+ShowSeconds: 0
+TimeFormat: h':'mm tt
+DateFormat: MMMM d',' yyyy
+WeekdayFormat: dddd
+WeekdayFormatCustom: ''
+TopLine: "%date%\_ \_ %time%"
+BottomLine: ''
+MiddleLine: ''
+TooltipLine: ''
+TooltipLineMode: ''
+Width: 180
+Height: 60
+MaxWidth: 0
+TextSpacing: 0
+DataCollection:
+  NetworkMetricsFormat: ''
+  NetworkMetricsFixedDecimals: 0
+  PercentageFormat: ''
+  UpdateInterval: 0
+  NetworkAdapterName: ''
+  GpuAdapterName: ''
+MediaPlayer:
+  IgnoredPlayers:
+    - ''
+  MaxLength: 0
+  NoMediaText: ''
+  RemoveBrackets: 0
+WebContentWeatherLocation: ''
+WebContentWeatherFormat: ''
+WebContentWeatherUnits: ''
+WebContentsItems:
+  - Url: ''
+    BlockStart: ''
+    Start: ''
+    End: ''
+    ContentMode: ''
+    SearchReplace:
+      - Search: ''
+        Replace: ''
+    MaxLength: 50
+WebContentsUpdateInterval: 10
+TimeZones:
+  - Eastern Standard Time
+TimeStyle:
+  Hidden: 0
+  TextColor: ''
+  TextAlignment: ''
+  FontSize: 0
+  FontFamily: ''
+  FontWeight: ''
+  FontStyle: ''
+  FontStretch: ''
+  CharacterSpacing: 0
+DateStyle:
+  Hidden: 1
+  TextColor: ''
+  TextAlignment: ''
+  FontSize: 0
+  FontFamily: ''
+  FontWeight: ''
+  FontStyle: ''
+  FontStretch: ''
+  CharacterSpacing: 0
+oldTaskbarOnWin11: 0
