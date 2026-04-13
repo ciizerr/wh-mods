@@ -1,33 +1,103 @@
-# Neko Cat Windhawk Mod
+# ⚡ WH Mods Hub
 
-This mod brings the classic Neko desktop pet to Windows right on your desktop! By injecting into your shell (`explorer.exe`), Neko roams your actual screen dynamically over all your windows. It provides full configuration, interactivity, and custom audio from the Windhawk Mod Settings.
+<div align="center">
 
-## How it works
+![License](https://img.shields.io/github/license/ciizerr/wh-mods?style=for-the-badge&color=blue)
+![Repo Size](https://img.shields.io/github/repo-size/ciizerr/wh-mods?style=for-the-badge&color=green)
+![Windhawk Version](https://img.shields.io/badge/Windhawk-Compatible-orange?style=for-the-badge&logo=windows)
 
-The Neko Cat operates on a dual-framework:
-- **State Machine Engine (`5 FPS`)**: Internally, Neko tracks his logic exactly like the classic 90s application. He decides when to sleep, wash, run, or scratch at a calculated 5 ticks per second. 
-- **Smooth Renderer (`60 FPS`)**: The mod smoothly interpolates the cat's travel path to match your screen's refresh rate using GDI+ rendering. The pixel-art frames are automatically upscaled cleanly via Nearest-Neighbor interpolation based on your preferred scale.
+**A curated collection of desktop enhancements, assets, and configurations for the Windhawk platform.**
 
-Because the window uses Alpha-mapping, your mouse perfectly passes right through the "transparent" portions of the cat to click your desktop icons underneath, but clicking exactly on the cat registers an interaction!
+[Explore Mods](#-mods-included) • [Installation](#-installation-guide) • [Report Bug](https://github.com/ciizerr/wh-mods/issues) • [Request Feature](https://github.com/ciizerr/wh-mods/issues)
 
-## Cat Behaviors
+</div>
 
-You can cycle through Neko's different behavior patterns by **Left-Clicking** on him! Every time you click, he will meow and shift to the next behavior in this list:
+---
 
-1. **Chase Mouse**: (Default) The cat lovingly chases your mouse cursor. If you stop moving the mouse, he stops, washes himself, and eventually falls asleep.
-2. **Run Away**: Neko gets shy! Whenever your mouse gets too close to him, he will bolt in the opposite direction.
-3. **Random**: Neko gets the zoomies and randomly picks different spots on the screen to sprint towards.
-4. **Pace**: Neko continuously patrols around the extreme edges of your monitor, running corner to corner.
-5. **Run Around**: Neko chases an invisible bouncing ball around the screen (very similar to a bouncing DVD logo)!
+## 📖 Overview
 
-### Special Feature: Forced Sleep
-If you **Click and Drag** the cat and drop him somewhere, he will immediately yawn, curl up, and enter `FORCED_SLEEP` mode. While in this mode, he ignores your mouse movements completely and will just snore peacefully. 
+**WH Mods Hub** is a centralized repository dedicated to custom Windhawk mods and configs. where I store all my mods and configs for Windhawk. 
 
-To wake him up from this deep slumber, simply **Right-Click** him! He will wake up and instantly resume chasing your mouse.
+---
 
-## Mod Settings
-Open the Windhawk GUI to configure:
-- **Asset Path**: The folder containing your `.png` sprites and `.wav` sounds.
-- **Cat Scale**: Set to `2` for a 64x64 cat or shrink/grow him.
-- **Speed**: How quickly he sprints across your screen.
-- **Enable Sound / Interval**: Turn on `.wav` meows and adjust how frequently he snores while sleeping!
+## 🛠️ Repository Structure
+
+Understanding the layout for seamless navigation:
+
+```text
+.
+├── assets/             # Raw media, sprites, and audio files
+│   └── neko-cat/       # Dedicated assets for the Neko mod
+├── Config/             # Exported mod configuration presets (YAML/JSON)
+├── mods/               # Production-ready Windhawk source files (.wh.cpp)
+├── nekojs-reference/   # Research and reference code for pet logic
+└── screenshots/        # Previews and visual documentation
+```
+
+---
+
+## 🖼️ Preview
+
+### 🐱 Neko Desktop Pet
+![neko](./screenshots/Neko-cat.gif)
+
+---
+
+## 🚀 Installation Guide
+
+> [!IMPORTANT]
+> Ensure you have [Windhawk](https://windhawk.net/) installed and running before proceeding.
+
+### Standard Setup
+1. **Navigate** to the [`mods/`](./mods) directory.
+2. **Open** the source file you wish to install (e.g., `neko-cat.wh.cpp`).
+3. **Copy** the entire content of the file.
+4. **Open Windhawk** → Click the **Arrow** next to the "Mods" tab → Select **"Create New Mod"**.
+5. **Paste** the code into the editor, then click **"Save and Compile"**.
+
+> [!TIP]
+> If the mod requires assets, it will automatically attempt to fetch them from this repository. Ensure you have an active internet connection during the first initialization.
+
+---
+
+## 🧩 Featured Mods
+
+### Neko Cat (Virtual Pet)
+A modern port of the classic "Neko" desktop pet, optimized for modern Windows environments via Windhawk.
+
+- **Dynamic Behaviors:** Pathfinding, interactive scratching, and autonomous sleeping.
+- **Customization:** Toggle sound effects, adjust movement speed, and customize trigger zones.
+- **Low Footprint:** Written in clean C++ to ensure zero impact on system performance.
+
+---
+
+## 🛡️ Asset Integrity & Safety
+
+Security and transparency are prioritized in this repository.
+
+> [!CAUTION]
+> **External Assets:** Most mods fetch assets from this branch. While this ensures a small installation size, it requires a network connection.
+> 
+> **Offline Support:** To use these mods without internet access, you must manually download the [`assets/`](./assets) folder and update the asset URLs in the source code to point to your local storage.
+
+- **Hash Verification:** Every asset is served directly from GitHub using HTTPS.
+- **Zero Third-Party Dependencies:** No opaque binaries or external trackers are included.
+
+---
+
+## 💬 Connect & Support
+
+Need assistance or want to share your feedback?
+
+- **GitHub Issues:** [Track bugs and suggestions](https://github.com/ciizerr/wh-mods/issues)
+
+---
+
+<div align="center">
+
+**Made with ⚡ by [ciizerr](https://github.com/ciizerr)**
+
+Licensed under the [MIT License](./LICENSE).  
+*Windhawk is a registered project of its respective owners.*
+
+</div>
