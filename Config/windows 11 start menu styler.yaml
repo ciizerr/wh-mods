@@ -1,0 +1,319 @@
+theme: TranslucentStartMenu
+disableNewStartMenuLayout: '1'
+styleConstants:
+  - bg=<WindhawkBlur BlurAmount="15" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.6" />
+  - bg2=<WindhawkBlur BlurAmount="20" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.3" />
+  - bg3=<WindhawkBlur BlurAmount="13" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
+  - bg4=<WindhawkBlur BlurAmount="70" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
+  - border=<LinearGradientBrush StartPoint="0,0" EndPoint="0,1" Opacity="0.15"><GradientStop Color="{ThemeResource TextFillColorSecondary}" Offset="0.0"/><GradientStop Color="{ThemeResource TextFillColorTertiary}" Offset="0.5"/><GradientStop Color="{ThemeResource TextFillColorSecondary}" Offset="1.0"/></LinearGradientBrush>
+  - r=10
+controlStyles:
+  - target: Button#CloseAllAppsButton
+    styles:
+      - CornerRadius=14
+      - Margin=0,0,-32,0
+      - Width=74
+      - Height=26
+  - target: Grid#ShowMoreSuggestions
+    styles:
+      - Visibility=1
+  - target: Grid#SuggestionsParentContainer
+    styles:
+      - Visibility=1
+  - target: Grid#TopLevelSuggestionsListHeader
+    styles:
+      - Visibility=1
+  - target: Button#ShowAllAppsButton
+    styles:
+      - CornerRadius=14
+      - Margin=0,0,32,0
+      - Width=148
+      - Height=26
+  - target: StartDocked.SearchBoxToggleButton
+    styles:
+      - Margin=30,0,31,28
+  - target: PipsPager#PinnedListPipsPager
+    styles:
+      - Visibility=1
+  - target: Border#AcrylicBorder
+    styles:
+      - Background:=<AcrylicBrush TintColor="{ThemeResource CardStrokeColorDefaultSolid}" FallbackColor="{ThemeResource CardStrokeColorDefaultSolid}" TintOpacity="0" TintLuminosityOpacity=".15" Opacity="1"/>
+      - CornerRadius=62
+      - BorderBrush:=<AcrylicBrush TintColor="{ThemeResource SurfaceStrokeColorDefault}" FallbackColor="{ThemeResource SurfaceStrokeColorDefault}" TintOpacity="0" TintLuminosityOpacity=".25" Opacity="1"/>
+      - BorderThickness=1
+  - target: Grid#MainContent
+    styles:
+      - CornerRadius=62
+  - target: StartMenu.PinnedList
+    styles:
+      - Height=690
+  - target: TextBlock#DisplayName
+    styles:
+      - Margin=0,19,0,-16
+      - FontSize=13
+      - FontFamily=Aptos
+      - Opacity=.98
+  - target: TextBlock#PinnedListHeaderText
+    styles:
+      - Margin=-29,0,0,0
+      - FontFamily=Aptos
+      - Opacity=.85
+      - FontSize=16
+  - target: Border#TaskbarSearchBackground
+    styles:
+      - Visibility=1
+  - target: Border#AppBorder
+    styles:
+      - Background:=<AcrylicBrush TintColor="{ThemeResource CardStrokeColorDefaultSolid}"  FallbackColor="{ThemeResource CardStrokeColorDefaultSolid}" TintOpacity="0" TintLuminosityOpacity=".1" Opacity="1"/>
+      - BorderBrush:=<AcrylicBrush TintColor="{ThemeResource SurfaceStrokeColorDefault}" FallbackColor="{ThemeResource SurfaceStrokeColorDefault}" TintOpacity="0" TintLuminosityOpacity=".1" Opacity="1"/>
+      - CornerRadius=52
+  - target: Border#dropshadow
+    styles:
+      - CornerRadius=52
+  - target: Cortana.UI.Views.RichSearchBoxControl#SearchBoxControl
+    styles:
+      - Margin=33,33,33,10
+  - target: TextBlock#UserTileNameText
+    styles:
+      - Visibility=1
+  - target: TextBlock#AllAppsHeading
+    styles:
+      - FontFamily=Aptos
+      - Margin=-32,0,0,0
+      - FontSize=16
+      - Opacity=.85
+  - target: Border#ContentBorder
+    styles:
+      - CornerRadius=6
+  - target: GridViewItem > Border#ContentBorder > Grid#DroppedFlickerWorkaroundWrapper > Border#BackgroundBorder
+    styles:
+      - FocusVisualPrimaryThickness=0
+  - target: StartDocked.SearchBoxToggleButton > Grid > ContentPresenter > TextBlock#PlaceholderText
+    styles:
+      - Text="The Yellow Dairy" ⨈
+      - FontWeight=700
+      - FontFamily=Aptos
+      - FontSize=24
+      - Foreground:=<SolidColorBrush Color="{ThemeResource FocusStrokeColorOuter}" Opacity=".85"/>
+      - Margin=10,0,0,0
+  - target: StartDocked.SearchBoxToggleButton > Grid > Border
+    styles:
+      - Background=transparent
+      - BorderBrush=transparent
+  - target: StartDocked.SearchBoxToggleButton > Grid > FontIcon
+    styles:
+      - Transform3D:=<CompositeTransform3D  TranslateX="165" TranslateY="-1"/>
+      - Foreground:=<SolidColorBrush Color="{ThemeResource FocusStrokeColorOuter}" FallbackColor="{ThemeResource FocusStrokeColorOuter}" Opacity=".15"/>
+      - FontSize=24
+  - target: Grid#TopLevelRoot
+    styles:
+      - Margin=0,-8,0,0
+  - target: GridViewItem
+    styles:
+      - Height=96
+      - Margin=0,0,0,2
+  - target: StartDocked.UserTileView
+    styles:
+      - Margin=512,-1290,-2000,0
+  - target: StartDocked.UserTileView > StartDocked.NavigationPaneButton > Grid > Border
+    styles:
+      - CornerRadius=99
+      - Margin=8,0,8,0
+  - target: StartDocked.PowerOptionsView
+    styles:
+      - Margin=-64,-1290,-2000,0
+      - CornerRadius=99
+      - Opacity=.85
+  - target: TextBlock#ShowAllAppsButtonText
+    styles:
+      - FontFamily=Aptos
+      - Opacity=.85
+  - target: Button#CloseAllAppsButton > ContentPresenter > StackPanel > TextBlock
+    styles:
+      - FontFamily=Aptos
+      - Opacity=.85
+  - target: Border#AcrylicOverlay
+    styles:
+      - Visibility=1
+  - target: Grid#AllAppsPaneHeader
+    styles:
+      - Margin=64,-8,64,0
+  - target: Grid#InnerContent
+    styles:
+      - Margin=0,31,0,-64
+  - target: TextBlock#AppDisplayName
+    styles:
+      - FontFamily=Aptos
+      - Opacity=.85
+      - Margin=4,0,0,0
+  - target: Button#Header > Border > TextBlock
+    styles:
+      - FontFamily=Aptos
+      - FontWeight=600
+      - Opacity=.85
+  - target: StartDocked.PowerOptionsView > StartDocked.NavigationPaneButton > Grid > Border
+    styles:
+      - CornerRadius=99
+      - Margin=1
+  - target: TileGrid
+    styles:
+      - Background:=<SolidColorBrush Color="{ThemeResource ControlFillColorInputActive}" FallbackColor="{ThemeResource ControlFillColorInputActive}" Opacity=".15"/>
+      - CornerRadiusProtected=8
+      - BorderThicknessProtected=1
+      - BorderBrushProtected:=<SolidColorBrush Color="{ThemeResource SurfaceStrokeColorDefault}" FallbackColor="{ThemeResource SurfaceStrokeColorDefault}" Opacity=".15"/>
+  - target: ListViewItem
+    styles:
+      - Margin=1,0,-6,0
+      - CornerRadius=4
+  - target: Button#Header
+    styles:
+      - Margin=4,0,-3,0
+  - target: StartDocked.AllAppsPane#AllAppsPanel
+    styles:
+      - Margin=-20,0,-6,0
+  - target: TextBlock#PlaceholderTextContentPresenter
+    styles:
+      - FontFamily=Aptos
+      - FontSize=24
+      - FontWeight=700
+      - Foreground:=<SolidColorBrush Color="{ThemeResource FocusStrokeColorOuter}" FallbackColor="{ThemeResource FocusStrokeColorOuter}" Opacity=".7"/>
+  - target: Microsoft.UI.Xaml.Controls.AnimatedIcon#SearchIconPlayer
+    styles:
+      - Visibility=1
+  - target: Button#SearchGlyphContainer
+    styles:
+      - FontSize=32
+      - Visibility=1
+  - target: Cortana.UI.Views.CortanaRichSearchBox#SearchTextBox
+    styles:
+      - FontSize=24
+      - Foreground:=<SolidColorBrush Color="{ThemeResource TextFillColorPrimary}" FallbackColor="{ThemeResource TextFillColorPrimary}" Opacity=".95"/>
+      - FontFamily=Aptos
+      - Opacity=.85
+      - FontWeight=ExtraBold
+  - target: Border#LayerBorder
+    styles:
+      - Visibility=1
+  - target: Windows.UI.Xaml.Controls.FontIcon#SearchBoxOnTaskbarSearchGlyph
+    styles:
+      - Visibility=0
+      - Margin=0
+      - FontSize=32
+      - Opacity=.85
+  - target: Cortana.UI.Views.RichSearchBoxControl#SearchBoxControl
+    styles:
+      - Margin=25,32,25,13
+  - target: Grid#WebViewGrid > WebView
+    styles:
+      - Margin=-3,0,0,0
+  - target: TextBlock#StatusMessage
+    styles:
+      - Visibility=1
+  - target: Border#LogoBackgroundPlate
+    styles:
+      - Margin=12,0,0,0
+  - target: Grid#WebViewGrid
+    styles:
+      - CornerRadius=0,0,12,0
+  - target: Border#DropShadow
+    styles:
+      - CornerRadius=62
+  - target: Border#DropShadowDismissTarget
+    styles:
+      - CornerRadius=12
+  - target: Windows.UI.Xaml.Controls.FlyoutPresenter[1]
+    styles:
+      - Margin=-250,50,0,0
+  - target: StartDocked.LauncherFrame > Grid#RootGrid > Grid#RootContent > Grid#MainContent > Grid#InnerContent > Rectangle
+    styles:
+      - Visibility=Collapsed
+  - target: Windows.UI.Xaml.Controls.FlyoutPresenter
+    styles:
+      - Margin=-250,0,0,0
+  - target: StartDocked.SearchBoxToggleButton > Grid > FontIcon#SearchGlyph
+    styles:
+      - Margin=0,-3,0,0
+      - FontSize=25
+      - Foreground:=<SolidColorBrush Color="{ThemeResource FocusStrokeColorOuter}" Opacity=".15"/>
+  - target: StartMenu.ExpandedFolderList > Grid#Root > Border
+    styles:
+      - Height=420
+  - target: TextBox#ExpandedFolderNameTextBox
+    styles:
+      - Margin=-15,-15,15,20
+  - target: Windows.UI.Xaml.Controls.GridView#FolderList > Border
+    styles:
+      - Margin=0,0,0,-60
+  - target: StackPanel#TimeAndDatePanel
+    styles:
+      - VerticalAlignment=Center
+      - HorizontalAlignment=Center
+  - target: StackPanel#TimePanel > TextBlock#Time
+    styles:
+      - Foreground:=<WindhawkBlur BlurAmount="10" TintColor="#F2F2F2" TintOpacity="0.3" />
+      - FontFamily=Dezire Stacked Bold
+      - RenderTransform:=<ScaleTransform ScaleX="5" ScaleY="5" />
+      - RenderTransformOrigin=0.5,0.5
+      - Margin=0,75,0,0
+  - target: StackPanel#TimeAndDatePanel > TextBlock#Date
+    styles:
+      - Foreground:=White
+      - FontWeight=Light
+      - RenderTransformOrigin=0.5,0.5
+      - RenderTransform:=<ScaleTransform ScaleX="2" ScaleY="2" />
+      - Margin=0,85,0,0
+  - target: Grid#MediaControlsContainer
+    styles:
+      - RenderTransform:=<ScaleTransform ScaleX="1.25" ScaleY="1.25" />
+      - RenderTransformOrigin=0.5,0.5
+      - Margin=0,0,0,110
+  - target: Grid#MediaTransportControls
+    styles:
+      - Background:=$bg3
+      - BorderThickness=1
+      - Padding=5,5,10,5
+      - Width=310
+      - Height=80
+      - CornerRadius=10
+      - BorderBrush=#20FFFFFF
+  - target: Button#Videos_Preview_LockScreen_LockScreen
+    styles:
+      - Visibility=Collapsed
+  - target: Button#Weather_Preview_LockScreen_LockScreen
+    styles:
+      - Visibility=Collapsed
+  - target: Grid#NetworkAndBatteryIcon
+    styles:
+      - HorizontalAlignment=Center
+  - target: StartMenu.ExpandedFolderList > Grid#Root > Border
+    styles:
+      - Background:=$bg2
+      - CornerRadius=50
+      - BorderThickness=1
+      - BorderBrush:=$border
+  - target: Windows.UI.Xaml.Controls.FlyoutPresenter
+    styles:
+      - Background=transparent
+      - BorderThickness=0
+      - CornerRadius=20
+      - Padding=0
+  - target: StartDocked.UserTileView
+    styles:
+      - Background:=$bg2
+      - CornerRadius=20
+  - target: StartDocked.UserTileView > Grid#RootGrid
+    styles:
+      - Background=transparent
+  - target: StartDocked.UserTileView > Grid > Border#AcrylicBorder
+    styles:
+      - Visibility=Collapsed
+themeResourceVariables:
+  - ''
+webContentStyles:
+  - target: ''
+    styles:
+      - ''
+webContentCustomJs: ''
+resourceVariables:
+  - variableKey: ''
+    value: ''

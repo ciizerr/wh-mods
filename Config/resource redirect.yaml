@@ -1,0 +1,8 @@
+iconTheme: Linuxfx 11 AIO|themes/icons/niivu/Linuxfx-11-AIO.zip
+themePaths:
+  - ''
+redirectionResourcePaths:
+  - original: ''
+    redirect: ''
+allResourceRedirect: 1
+themeFolder: ''
