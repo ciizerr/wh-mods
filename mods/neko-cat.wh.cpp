@@ -687,6 +687,9 @@ public:
         BLENDFUNCTION blend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
 
         UpdateLayeredWindow(hwnd, hdcScreen, &ptDest, &winSize, hdcMem, &ptSrc, 0, &blend, ULW_ALPHA);
+        
+        // Re-enforce topmost status to prevent disappearing behind other "Topmost" windows
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
         SelectObject(hdcMem, hbmOld);
         DeleteObject(hbmMem);

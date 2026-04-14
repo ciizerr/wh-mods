@@ -29,7 +29,6 @@ Understanding the layout for seamless navigation:
 ├── assets/             # Raw media, sprites, and audio files
 ├── Config/             # Exported mod configuration presets (YAML/JSON)
 ├── mods/               # Production-ready Windhawk source files (.wh.cpp)
-├── nekojs-reference/   # Research and reference code for pet logic
 ├── screenshots/        # Previews and visual documentation
 └── install-config.ps1  # Automated configuration installer (PowerShell)
 ```
