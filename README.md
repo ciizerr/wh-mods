@@ -29,7 +29,7 @@ Understanding the layout for seamless navigation:
 ├── assets/             # Raw media, sprites, and audio files
 ├── Config/             # Exported mod configuration presets (YAML/JSON)
 ├── mods/               # Production-ready Windhawk source files (.wh.cpp)
-├── screenshots/        # Previews and visual documentation
+├── previews/           # Previews and visual documentation
 └── install-config.ps1  # Automated configuration installer (PowerShell)
 ```
 
@@ -63,7 +63,7 @@ iwr -useb https://raw.githubusercontent.com/ciizerr/wh-mods/main/install-config.
 <details>
 <summary><b>🐱 Neko Desktop Pet</b></summary>
 
-![neko](./screenshots/Neko-cat.gif)
+![neko](./previews/Neko-cat.gif)
 
 </details>
 
