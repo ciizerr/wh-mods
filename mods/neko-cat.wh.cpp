@@ -449,7 +449,8 @@ public:
             }
         } else {
             // random chance to purr/idle noise
-            if ((state == STOP || state == WASH) && g_soundEnabled && rand() % 50 == 0) {
+            // skip if forced sleep is active or if the user wants a quiet sleeping cat
+            if ((state == STOP || state == WASH) && g_soundEnabled && g_sleepSoundRepeat && behaviorMode != FORCED_SLEEP && rand() % 100 == 0) {
                 const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" };
                 PlayAudio(idles[rand() % 3], false);
             }
@@ -494,11 +495,11 @@ public:
     }
 
     void RunRandomly() {
-        if (state == SLEEP) actionCount++;
-        if (actionCount > idleThreshold * 10) {
+        if (state != SLEEP) actionCount++;
+        if (state != SLEEP && actionCount > idleThreshold * 20) {
             actionCount = 0;
-            targetX = virtualX + rand() % boundsWidth;
-            targetY = virtualY + rand() % boundsHeight;
+            targetX = virtualX + rand() % (boundsWidth > 0 ? boundsWidth : 1);
+            targetY = virtualY + rand() % (boundsHeight > 0 ? boundsHeight : 1);
             RunTowards(targetX, targetY);
         } else {
             RunTowards(targetX, targetY);
@@ -548,6 +549,12 @@ public:
         }
         if (newState == SLEEP && state != SLEEP) {
             hasPlayedSleepSound = false;
+        }
+
+        // 50% chance to meow/purr when starting to yawn before sleep
+        if (newState == YAWN && g_soundEnabled && (rand() % 2 == 0)) {
+            const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" };
+            PlayAudio(idles[rand() % 3], false);
         }
 
         tickCount = 0;
