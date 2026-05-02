@@ -49,14 +49,15 @@ controlStyles:
       - Height=690
   - target: TextBlock#DisplayName
     styles:
+      - Visibility=Collapsed
       - Margin=0,19,0,-16
       - FontSize=13
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Opacity=.98
   - target: TextBlock#PinnedListHeaderText
     styles:
       - Margin=-29,0,0,0
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Opacity=.85
       - FontSize=16
   - target: Border#TaskbarSearchBackground
@@ -78,7 +79,7 @@ controlStyles:
       - Visibility=1
   - target: TextBlock#AllAppsHeading
     styles:
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Margin=-32,0,0,0
       - FontSize=16
       - Opacity=.85
@@ -90,9 +91,9 @@ controlStyles:
       - FocusVisualPrimaryThickness=0
   - target: StartDocked.SearchBoxToggleButton > Grid > ContentPresenter > TextBlock#PlaceholderText
     styles:
-      - Text="The Yellow Dairy" ⨈
+      - Text=The Yellow Dairy
       - FontWeight=700
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - FontSize=24
       - Foreground:=<SolidColorBrush Color="{ThemeResource FocusStrokeColorOuter}" Opacity=".85"/>
       - Margin=10,0,0,0
@@ -126,11 +127,11 @@ controlStyles:
       - Opacity=.85
   - target: TextBlock#ShowAllAppsButtonText
     styles:
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Opacity=.85
   - target: Button#CloseAllAppsButton > ContentPresenter > StackPanel > TextBlock
     styles:
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Opacity=.85
   - target: Border#AcrylicOverlay
     styles:
@@ -143,12 +144,12 @@ controlStyles:
       - Margin=0,31,0,-64
   - target: TextBlock#AppDisplayName
     styles:
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Opacity=.85
       - Margin=4,0,0,0
   - target: Button#Header > Border > TextBlock
     styles:
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - FontWeight=600
       - Opacity=.85
   - target: StartDocked.PowerOptionsView > StartDocked.NavigationPaneButton > Grid > Border
@@ -173,7 +174,7 @@ controlStyles:
       - Margin=-20,0,-6,0
   - target: TextBlock#PlaceholderTextContentPresenter
     styles:
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - FontSize=24
       - FontWeight=700
       - Foreground:=<SolidColorBrush Color="{ThemeResource FocusStrokeColorOuter}" FallbackColor="{ThemeResource FocusStrokeColorOuter}" Opacity=".7"/>
@@ -188,7 +189,7 @@ controlStyles:
     styles:
       - FontSize=24
       - Foreground:=<SolidColorBrush Color="{ThemeResource TextFillColorPrimary}" FallbackColor="{ThemeResource TextFillColorPrimary}" Opacity=".95"/>
-      - FontFamily=Aptos
+      - FontFamily=Edelsans
       - Opacity=.85
       - FontWeight=ExtraBold
   - target: Border#LayerBorder
@@ -251,7 +252,7 @@ controlStyles:
   - target: StackPanel#TimePanel > TextBlock#Time
     styles:
       - Foreground:=<WindhawkBlur BlurAmount="10" TintColor="#F2F2F2" TintOpacity="0.3" />
-      - FontFamily=Dezire Stacked Bold
+      - FontFamily=Edelsans
       - RenderTransform:=<ScaleTransform ScaleX="5" ScaleY="5" />
       - RenderTransformOrigin=0.5,0.5
       - Margin=0,75,0,0
@@ -314,6 +315,3 @@ webContentStyles:
     styles:
       - ''
 webContentCustomJs: ''
-resourceVariables:
-  - variableKey: ''
-    value: ''
