@@ -48,6 +48,7 @@ $Presets = @(
     @{ File = "taskbar clock customisation.yaml"; Id = "taskbar-clock-customization"; Url = "https://windhawk.net/mods/taskbar-clock-customization" }
     @{ File = "vlc discord rich presence.yaml"; Id = "vlc-discord-rpc"; Url = "https://windhawk.net/mods/vlc-discord-rpc" }
     @{ File = "resource redirect.yaml"; Id = "icon-resource-redirect"; Url = "https://windhawk.net/mods/icon-resource-redirect" }
+    @{ File = "desktop-live-overlay.yaml"; Id = "desktop-live-overlay"; Url = "https://windhawk.net/mods/desktop-live-overlay" }
 )
 
 Draw-Header

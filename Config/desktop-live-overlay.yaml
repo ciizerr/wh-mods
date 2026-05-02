@@ -1,0 +1,32 @@
+topLine:
+  text: '%weekday%'
+  fontSize: 300
+  textColor: '#80FFFFFF'
+  fontFamily: Artifact
+  fontWeight: ''
+  fontStyle: ''
+bottomLine:
+  text: '%time% %n% %weather%'
+  fontSize: 32
+  textColor: '#80FFFFFF'
+  fontFamily: Autography
+  fontWeight: ExtraBold
+  fontStyle: ''
+showSeconds: 0
+timeFormat: 'hh : mm tt'
+dateFormat: ''
+refreshInterval: 3
+background:
+  enabled: 0
+  color: '#43ff64d9'
+  padding: 20
+  cornerRadius: 80
+  blur: 10
+  borderSize: 0
+  borderColor: '#C0FFFFFF'
+verticalPosition: 50
+horizontalPosition: 50
+monitor: 2
+weatherLocation: bihar
+weatherFormat: '%c %t'
+weatherUnits: metricMsWind

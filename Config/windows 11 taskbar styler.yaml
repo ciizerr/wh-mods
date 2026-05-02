@@ -150,12 +150,6 @@ controlStyles:
       - ContentTransitions@InactivePointerOver:=<TransitionCollection><EntranceThemeTransition FromHorizontalOffset="0" FromVerticalOffset="0" IsStaggeringEnabled="False" /></TransitionCollection>
       - ContentTransitions@ActivePointerOver:=<TransitionCollection><EntranceThemeTransition FromHorizontalOffset="0" FromVerticalOffset="0" IsStaggeringEnabled="False" /></TransitionCollection>
       - Margin=0,1,0,0
-  - target: 'Taskbar.TaskListButton[AutomationProperties.AutomationId=Appid: com.squirrel.TIDAL.TIDAL] > Taskbar.TaskListLabeledButtonPanel#IconPanel > Windows.UI.Xaml.Controls.Image#Icon'
-    styles:
-      - Source=file:///C:/Customization/Icons/Apps/Tidal.png
 themeResourceVariables:
   - ''
-xamlDiagnosticsHandling: alert
-resourceVariables:
-  - variableKey: ''
-    value: ''
+xamlDiagnosticsHandling: allow
