@@ -1,4 +1,11 @@
 theme: ''
+styleConstants:
+  - bg=<WindhawkBlur BlurAmount="10" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
+  - bg2=<WindhawkBlur BlurAmount="10" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
+  - bgx=<WindhawkBlur BlurAmount="7" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
+  - border=<LinearGradientBrush StartPoint="0,0" EndPoint="0,1" Opacity="0.15"><GradientStop Color="{ThemeResource TextFillColorSecondary}" Offset="0.0"/><GradientStop Color="{ThemeResource TextFillColorTertiary}" Offset="0.5"/><GradientStop Color="{ThemeResource TextFillColorSecondary}" Offset="1.0"/></LinearGradientBrush>
+  - r=30
+  - r2=14
 controlStyles:
   - target: Grid#NotificationCenterGrid
     styles:
@@ -178,7 +185,7 @@ controlStyles:
       - BorderThickness=1
       - BorderBrush:=$border
       - Background:=Transparent
-      - CornerRadius=$r
+      - CornerRadius=$r2
   - target: Windows.UI.Xaml.Controls.ToolTip > Windows.UI.Xaml.Controls.ContentPresenter#LayoutRoot
     styles:
       - Background:=$bg2
@@ -203,12 +210,5 @@ controlStyles:
   - target: Windows.UI.Xaml.Controls.Grid#MainGrid
     styles:
       - Background:=Transparent
-styleConstants:
-  - bg=<WindhawkBlur BlurAmount="20" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
-  - bg2=<WindhawkBlur BlurAmount="10" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
-  - bgx=<WindhawkBlur BlurAmount="7" TintColor="{ThemeResource SystemChromeLowColor}" TintOpacity="0.1" />
-  - border=<LinearGradientBrush StartPoint="0,0" EndPoint="0,1" Opacity="0.15"><GradientStop Color="{ThemeResource TextFillColorSecondary}" Offset="0.0"/><GradientStop Color="{ThemeResource TextFillColorTertiary}" Offset="0.5"/><GradientStop Color="{ThemeResource TextFillColorSecondary}" Offset="1.0"/></LinearGradientBrush>
-  - r=32
-  - r2=14
 themeResourceVariables:
   - ''
