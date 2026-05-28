@@ -2,7 +2,7 @@
 // @id              neko-cat
 // @name            Neko Cat
 // @description     Adds a desktop pet cat that runs around and follows your mouse
-// @version         1.2.0
+// @version         1.2.1
 // @author          ciizerr
 // @github          https://github.com/ciizerr
 // @include         windhawk.exe
@@ -65,6 +65,13 @@ Enjoy your new friends!
 
 // ==WindhawkModSettings==
 /*
+- theme: "neko-cat"
+  $name: Pet Theme
+  $description: Choose your desktop pet character.
+  $options:
+    - neko-cat: Neko Cat
+    - sakura-icon: Sakura
+    - tomoyo-icon: Tomoyo
 - scale: 2
   $name: Cat Size
   $description: Changes how big Neko is on your screen.
@@ -136,6 +143,7 @@ const int CLAW_TIME = 10;
 const int SPRITE_SIZE = 32;
 
 std::wstring g_assetPath = L"";
+std::wstring g_theme = L"neko-cat";
 int g_scale = 2;
 int g_speed = 24;
 bool g_soundEnabled = true;
@@ -264,7 +272,7 @@ void DownloadMissingAssets() {
     CreatePath(g_assetPath);
     CreatePath(g_assetPath + L"\\sounds");
 
-    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/2c1ecbf9ba9d0964e1a764a090cb2b7df729dc5c/assets/neko-cat/";
+    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/" + g_theme + L"/";
 
     for (int i = 0; i < MAX_STATE; i++) {
         for (int f = 0; f < 2; f++) {
@@ -1271,9 +1279,17 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
 //  Tool mod implementation
 // ─────────────────────────────────────────────
 void LoadSettings() {
+    PCWSTR themeStr = Wh_GetStringSetting(L"theme");
+    if (themeStr) {
+        g_theme = themeStr;
+        Wh_FreeStringSetting(themeStr);
+    } else {
+        g_theme = L"neko-cat";
+    }
+
     WCHAR storagePath[MAX_PATH];
     if (Wh_GetModStoragePath(storagePath, ARRAYSIZE(storagePath))) {
-        g_assetPath = storagePath;
+        g_assetPath = std::wstring(storagePath) + L"\\" + g_theme;
     }
 
     g_scale = Wh_GetIntSetting(L"scale");
@@ -1320,7 +1336,16 @@ BOOL WhTool_ModInit()
 
 void WhTool_ModSettingsChanged()
 {
+    std::wstring oldTheme = g_theme;
     LoadSettings();
+    
+    if (oldTheme != g_theme) {
+        DownloadMissingAssets();
+        for (auto pNeko : g_Nekos) {
+            pNeko->LoadSprites();
+        }
+    }
+
     if (g_hThread) {
         PostThreadMessage(GetThreadId(g_hThread), WM_UPDATE_SETTINGS, 0, 0);
     }
