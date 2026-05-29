@@ -18,11 +18,9 @@ A cute desktop pet that follows your mouse, runs around your screen, and climbs 
 
 ## 🏃 Available Characters
 
-| Character | Theme ID | Dynamic Preview |
-| :--- | :--- | :---: |
-| **Neko Cat** | `neko-cat` | ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/main/previews/Neko-Mod/Neko-cat.gif) |
-| **Sakura** | `sakura-icon` | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/main/previews/Neko-Mod/sakura-icon.gif) |
-| **Tomoyo** | `tomoyo-icon` | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/main/previews/Neko-Mod/tomoyo-icon.gif) |
+| Neko Cat (`neko-cat`) | Sakura (`sakura-icon`) | Tomoyo (`tomoyo-icon`) |
+| :---: | :---: | :---: |
+| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/refs/heads/main/previews/Neko-mod/Neko-cat.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/refs/heads/main/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/refs/heads/main/previews/Neko-mod/tomoyo-icon.gif) |
 
 ---
 
