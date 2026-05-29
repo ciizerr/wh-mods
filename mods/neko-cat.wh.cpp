@@ -204,6 +204,8 @@ struct SpriteConfig {
     const wchar_t* files[2];
 };
 
+// Layout mapping specification for the single spritesheet.png.
+// Each state maps to a row (0 to 18) in a 19x2 grid of 32x32 sprites.
 SpriteConfig g_spriteConfigs[MAX_STATE] = {
     { L"awake.png", L"awake.png" }, // STOP
     { L"wash1.png", L"wash2.png" }, // WASH
@@ -274,12 +276,7 @@ void DownloadMissingAssets() {
 
     std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/" + g_theme + L"/";
 
-    for (int i = 0; i < MAX_STATE; i++) {
-        for (int f = 0; f < 2; f++) {
-            std::wstring file = g_spriteConfigs[i].files[f];
-            EnsureFileExists(g_assetPath + L"\\" + file, baseUrl + file);
-        }
-    }
+    EnsureFileExists(g_assetPath + L"\\spritesheet.png", baseUrl + L"spritesheet.png");
     
     const wchar_t* audios[] = { L"awake.wav", L"sleep.wav", L"idle1.wav", L"idle2.wav", L"idle3.wav" };
     for (const wchar_t* au : audios) {
@@ -330,15 +327,35 @@ public:
     int offsetY = 0;
 
     void LoadSprites() {
+        // Free existing sprites if any (prevents memory leak on theme switch)
         for (int i = 0; i < MAX_STATE; i++) {
             for (int f = 0; f < 2; f++) {
-                std::wstring path = g_assetPath + L"\\" + g_spriteConfigs[i].files[f];
-                sprites[i][f] = Bitmap::FromFile(path.c_str());
-                if (!sprites[i][f] || sprites[i][f]->GetLastStatus() != Ok) {
-                    Wh_Log(L"Error loading sprite: %s", path.c_str());
+                if (sprites[i][f]) {
+                    delete sprites[i][f];
+                    sprites[i][f] = nullptr;
                 }
             }
         }
+
+        std::wstring path = g_assetPath + L"\\spritesheet.png";
+        Bitmap* sheet = Bitmap::FromFile(path.c_str());
+        if (!sheet || sheet->GetLastStatus() != Ok) {
+            Wh_Log(L"Error loading spritesheet: %s", path.c_str());
+            if (sheet) delete sheet;
+            return;
+        }
+
+        for (int i = 0; i < MAX_STATE; i++) {
+            for (int f = 0; f < 2; f++) {
+                int srcX = f * SPRITE_SIZE;
+                int srcY = i * SPRITE_SIZE;
+                sprites[i][f] = sheet->Clone(srcX, srcY, SPRITE_SIZE, SPRITE_SIZE, PixelFormat32bppARGB);
+                if (!sprites[i][f] || sprites[i][f]->GetLastStatus() != Ok) {
+                    Wh_Log(L"Error cloning sprite frame %d for state %d", f, i);
+                }
+            }
+        }
+        delete sheet;
     }
 
     void PlayAudio(const wchar_t* file, bool loop) {
