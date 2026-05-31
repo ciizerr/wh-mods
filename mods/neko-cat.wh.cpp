@@ -1,7 +1,7 @@
 // ==WindhawkMod==
 // @id              neko-cat
-// @name            Neko Cat
-// @description     Adds a desktop pet cat that runs around and follows your mouse
+// @name            Desktop Companions
+// @description     Spawn multiple animated characters on your screen that interact with your windows and follow your cursor.
 // @version         1.3.0
 // @author          ciizerr
 // @github          https://github.com/ciizerr
@@ -11,8 +11,8 @@
 
 // ==WindhawkModReadme==
 /*
-# 🐱 Neko Cat
-A cute desktop pet that follows your mouse, runs around your screen, and climbs your windows!
+# 🐾 Desktop Companions
+Cute animated characters that follow your mouse, run around your screen, and climb your windows!
 
 ![Mod Showcase](https://raw.githubusercontent.com/ciizerr/wh-mods/2c1ecbf9ba9d0964e1a764a090cb2b7df729dc5c/previews/Neko-cat.gif)
 
@@ -26,24 +26,25 @@ A cute desktop pet that follows your mouse, runs around your screen, and climbs 
 
 ## ✨ Release Highlights
 
-### 🚀 v1.3.0: Spritesheet Architecture Update (Latest)
+### 🚀 v1.3.0: Spritesheet Architecture & Diversity Update (Latest)
 *   **High-Performance Texture Slicing**: Replaced 38 individual PNG file downloads with a single transparent spritesheet PNG. Disk/network checks are now **97% faster**!
+*   **Diverse Litters**: Added a new setting to spawn a randomized mix of all downloaded characters at once!
 *   **Dynamic Ram Cloning**: C++ slices the spritesheet in memory using GDI+ at startup, maintaining 100% logic and physics integrity.
-*   **Leak-Free Switcher**: Fixed a pre-existing memory leak when dynamically switching character themes in settings.
+*   **Leak-Free Switcher**: Fixed a pre-existing memory leak when dynamically switching characters in settings.
 *   **Tidy Assets**: Individual assets are cleanly archived, making adding new desktop characters in the future a breeze.
 
 ### 🎮 v1.2.0: Window Physics Update
-*   **Play With Window**: Pets climb active window sidebars, pace their roofs, and physically react to window edges sliding into them.
-*   **Multi-Cat Litters**: Spawn multiple pets with active separation physics so they roam independently without stacking.
-*   **Neko Key Shortcut**: Instantly toggle all pets on/off and mute sounds with custom keyboard shortcuts (e.g., `Ctrl+Alt+N`).
+*   **Play With Window**: Characters climb active window sidebars, pace their roofs, and physically react to window edges sliding into them.
+*   **Multi-Companion Litters**: Spawn multiple characters with active separation physics so they roam independently without stacking.
+*   **Companion Key Shortcut**: Instantly toggle all characters on/off and mute sounds with custom keyboard shortcuts (e.g., `Ctrl+Alt+C`).
 
 ---
 
 ## 🎮 How to Interact
 
 *   **Left-Click**: Cycles through all available movement behaviors.
-*   **Right-Click**: Wakes the pet up instantly from naps.
-*   **Drag & Drop**: Pick up your pet and throw/drop them anywhere! They'll recover, yawn, take a brief sleep cycle, and wake up.
+*   **Right-Click**: Wakes the character up instantly from naps.
+*   **Drag & Drop**: Pick up your companion and throw/drop them anywhere! They'll recover, yawn, take a brief sleep cycle, and wake up.
 *   **Window Nudging**: If sleeping on the floor, dragging a window boundary into them will gently slide them away and wake them up!
 
 ---
@@ -52,17 +53,17 @@ A cute desktop pet that follows your mouse, runs around your screen, and climbs 
 
 | Behavior Mode | Visual Style | In-Game Mechanics |
 | :--- | :--- | :--- |
-| **Chase Mouse** (Default) | Targeted chase | Pet follows your mouse cursor everywhere. |
-| **Run Away** | Avoidance | Try to catch your pet! They escape if the mouse gets too close. |
+| **Chase Mouse** (Default) | Targeted chase | Character follows your mouse cursor everywhere. |
+| **Run Away** | Avoidance | Try to catch your companion! They escape if the mouse gets too close. |
 | **Random** | Zoomies | Total random wandering and playing. |
-| **Pace** | Border patrol | He walks along the bottom edge of your screens. |
-| **Run Around** | Toy chase | The pet plays with and chases an invisible bouncing ball. |
-| **Play With Window** | Active scaling | The pet hunts down your focused window to climb the walls and walk the roof. |
+| **Pace** | Border patrol | They walk along the bottom edge of your screens. |
+| **Run Around** | Toy chase | The character plays with and chases an invisible bouncing ball. |
+| **Play With Window** | Active scaling | The companion hunts down your focused window to climb the walls and walk the roof. |
 
 ---
 
 ## 🖥️ Multi-Monitor Support
-Pets roam freely across **all your active monitors**! They seamlessly jump screen borders to track your mouse.
+Companions roam freely across **all your active monitors**! They seamlessly jump screen borders to track your mouse.
 
 ---
 
@@ -98,37 +99,54 @@ Enjoy your new friends!
 
 // ==WindhawkModSettings==
 /*
-- theme: "neko-cat"
-  $name: Pet Theme
-  $description: Choose your desktop pet character.
-  $options:
-    - neko-cat: Neko Cat
-    - sakura-icon: Sakura
-    - tomoyo-icon: Tomoyo
-- scale: 2
-  $name: Cat Size
-  $description: Changes how big Neko is on your screen.
-- speed: 24
-  $name: Movement Speed
-  $description: How fast Neko runs to follow your mouse.
-- sound: true
-  $name: Enable Sound
-  $description: Turn all meows and snoring sounds on or off.
-- sleep_sound_interval: 30
-  $name: Sleep Snore Interval
-  $description: How many seconds to wait between each snore.
-- sleep_sound_repeat: true
-  $name: Repeat Sleep Sound
-  $description: If checked, Neko will keep snoring while he sleeps.
-- fps: 60
-  $name: Fluidity (FPS)
-  $description: Smoothness of movement. Use 30 to save battery.
-- cat_count: 1
-  $name: Number of Cats
-  $description: "How many cats do you want? (Max recommended: 10)"
-- neko_key: "Ctrl+Alt+N"
-  $name: Neko Key Shortcut
-  $description: Keyboard shortcut to quickly hide/unhide Neko. (e.g. Ctrl+Alt+N, Shift+Esc, empty to disable)
+- AppearanceGroup:
+  - characterList:
+    - - theme: "neko-cat"
+        $name: Desktop Character
+        $description: Choose your desktop character.
+        $options:
+          - neko-cat: Neko Cat
+          - sakura-icon: Sakura
+          - tomoyo-icon: Tomoyo
+    $name: Choose Characters From list.
+    $description: "You can choose different characters for each slot. The more you add, the more it will show on the screen. (Max recommended: 10 characters.)"
+  - scale: 2
+    $name: Character Size
+    $description: Changes how big the character is on your screen.
+  - random_themes: false
+    $name: Randomize Multiple Characters
+    $description: "If checked, the custom list will be ignored and random characters will be chosen up to the total number of characters."
+  - character_count: 1
+    $name: Number of Characters
+    $description: "How many characters do you want? (Max recommended: 10)"
+  $name: Appearance & Character
+
+- BehaviorGroup:
+  - speed: 24
+    $name: Movement Speed
+    $description: How fast the character runs to follow your mouse.
+  - fps: 60
+    $name: Fluidity (FPS)
+    $description: Smoothness of movement. Use 30 to save battery.
+  $name: Movement & Behavior
+
+- AudioGroup:
+  - sound: true
+    $name: Enable Sound
+    $description: Turn all character sounds (like meows, yawns, and snores) on or off.
+  - sleep_sound_interval: 30
+    $name: Sleep Sound Interval
+    $description: How many seconds to wait between each sleep sound.
+  - sleep_sound_repeat: true
+    $name: Repeat Sleep Sound
+    $description: If checked, the character will keep making sleep sounds while sleeping.
+  $name: Sound & Audio
+
+- AdvancedGroup:
+  - neko_key: "Ctrl+Alt+N"
+    $name: Pet Toggle Shortcut
+    $description: Keyboard shortcut to quickly hide/unhide your pets. (e.g. Ctrl+Alt+N, Shift+Esc, empty to disable)
+  $name: Advanced & Shortcuts
 */
 // ==/WindhawkModSettings==
 
@@ -175,8 +193,17 @@ const int CLAW_TIME = 10;
 
 const int SPRITE_SIZE = 32;
 
+struct PetConfig {
+    std::wstring theme;
+};
+
+std::vector<PetConfig> g_customPets;
+const std::vector<std::wstring> g_officialThemes = { L"neko-cat", L"sakura-icon", L"tomoyo-icon" };
+
 std::wstring g_assetPath = L"";
+std::wstring g_storagePath = L"";
 std::wstring g_theme = L"neko-cat";
+bool g_randomThemes = true;
 int g_scale = 2;
 int g_speed = 24;
 bool g_soundEnabled = true;
@@ -231,7 +258,6 @@ UINT ParseHotkeyVK(const std::wstring& hotkeyStr) {
 // Tool mod handles
 static HWND   g_hwndOverlay = nullptr;
 static HANDLE g_hThread = nullptr;
-static HANDLE g_hWindowReady = nullptr;
 
 struct SpriteConfig {
     const wchar_t* files[2];
@@ -302,26 +328,93 @@ bool EnsureFileExists(const std::wstring& localPath, const std::wstring& remoteU
     return ok;
 }
 
-void DownloadMissingAssets() {
-    Wh_Log(L"Checking for missing assets in: %s", g_assetPath.c_str());
-    CreatePath(g_assetPath);
-    CreatePath(g_assetPath + L"\\sounds");
+bool EnsureThemeDownloaded(const std::wstring& themeName) {
+    if (themeName.empty()) return false;
+    std::wstring themePath = g_storagePath + L"\\" + themeName;
+    CreatePath(themePath);
+    CreatePath(themePath + L"\\sounds");
 
-    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/" + g_theme + L"/";
+    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/" + themeName + L"/";
 
-    EnsureFileExists(g_assetPath + L"\\spritesheet.png", baseUrl + L"spritesheet.png");
+    bool ok = EnsureFileExists(themePath + L"\\spritesheet.png", baseUrl + L"spritesheet.png");
     
     const wchar_t* audios[] = { L"awake.wav", L"sleep.wav", L"idle1.wav", L"idle2.wav", L"idle3.wav" };
     for (const wchar_t* au : audios) {
         std::wstring file(au);
-        EnsureFileExists(g_assetPath + L"\\sounds\\" + file, baseUrl + L"sounds/" + file);
+        if (!EnsureFileExists(themePath + L"\\sounds\\" + file, baseUrl + L"sounds/" + file)) {
+            ok = false;
+        }
     }
+    return ok;
+}
+
+void DownloadMissingAssets() {
+    Wh_Log(L"Checking for missing assets in: %s", g_assetPath.c_str());
+    
+    // Download active pet theme only when missing
+    EnsureThemeDownloaded(g_theme);
+}
+
+std::wstring GetRandomAvailableTheme() {
+    if (g_storagePath.empty()) return g_assetPath;
+
+    std::vector<std::wstring> themes;
+    WIN32_FIND_DATAW fd;
+    std::wstring searchPath = g_storagePath + L"\\*";
+    HANDLE hFind = FindFirstFileW(searchPath.c_str(), &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (wcscmp(fd.cFileName, L".") != 0 && wcscmp(fd.cFileName, L"..") != 0) {
+                    std::wstring testPath = g_storagePath + L"\\" + fd.cFileName + L"\\spritesheet.png";
+                    if (GetFileAttributesW(testPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                        themes.push_back(g_storagePath + L"\\" + fd.cFileName);
+                    }
+                }
+            }
+        } while (FindNextFileW(hFind, &fd));
+        FindClose(hFind);
+    }
+
+    if (!themes.empty()) {
+        int idx = rand() % themes.size();
+        return themes[idx];
+    }
+    return g_storagePath + L"\\neko-cat"; // Fallback folder
+}
+
+std::wstring GetThemePathForPet(int index) {
+    if (g_randomThemes) {
+        return GetRandomAvailableTheme();
+    }
+
+    if (g_customPets.empty()) {
+        return g_assetPath;
+    }
+    
+    std::wstring chosenTheme = g_customPets[index % g_customPets.size()].theme;
+    
+    // Find official theme match case-insensitively
+    std::wstring matchedTheme = chosenTheme;
+    std::wstring lowerChosen = chosenTheme;
+    for (auto& c : lowerChosen) c = towlower(c);
+    
+    for (const auto& official : g_officialThemes) {
+        std::wstring lowerOfficial = official;
+        for (auto& c : lowerOfficial) c = towlower(c);
+        if (lowerChosen == lowerOfficial) {
+            matchedTheme = official;
+            break;
+        }
+    }
+    return g_storagePath + L"\\" + matchedTheme;
 }
 
 class Neko {
 public:
     HWND hwnd = NULL;
     Bitmap* sprites[MAX_STATE][2] = {};
+    std::wstring assetPath;
 
     int behaviorMode = CHASE_MOUSE;
     int prevBehaviorMode = CHASE_MOUSE;  // restored after FORCED_SLEEP
@@ -370,12 +463,21 @@ public:
             }
         }
 
-        std::wstring path = g_assetPath + L"\\spritesheet.png";
+        std::wstring path = assetPath + L"\\spritesheet.png";
         Bitmap* sheet = Bitmap::FromFile(path.c_str());
         if (!sheet || sheet->GetLastStatus() != Ok) {
-            Wh_Log(L"Error loading spritesheet: %s", path.c_str());
+            Wh_Log(L"Error loading spritesheet: %s. Falling back to default neko-cat.", path.c_str());
             if (sheet) delete sheet;
-            return;
+            
+            // Fallback to default neko-cat
+            std::wstring fallbackPath = g_storagePath + L"\\neko-cat\\spritesheet.png";
+            sheet = Bitmap::FromFile(fallbackPath.c_str());
+            if (!sheet || sheet->GetLastStatus() != Ok) {
+                Wh_Log(L"Critical: Fallback spritesheet failed to load: %s", fallbackPath.c_str());
+                if (sheet) delete sheet;
+                return;
+            }
+            assetPath = g_storagePath + L"\\neko-cat";
         }
 
         for (int i = 0; i < MAX_STATE; i++) {
@@ -393,7 +495,7 @@ public:
 
     void PlayAudio(const wchar_t* file, bool loop) {
         if (!g_soundEnabled) return;
-        std::wstring path = g_assetPath + L"\\sounds\\" + file;
+        std::wstring path = assetPath + L"\\sounds\\" + file;
         Wh_Log(L"Playing audio: %s", file);
         DWORD flags = SND_ASYNC | SND_FILENAME | SND_NODEFAULT;
         if (loop) flags |= SND_LOOP;
@@ -491,7 +593,7 @@ public:
             
             pThis->prevBehaviorMode = pThis->behaviorMode;
             pThis->behaviorMode = FORCED_SLEEP;
-            Wh_Log(L"Neko dropped at %d, %d. Behavior: %d (%s)", 
+            Wh_Log(L"Pet dropped at %d, %d. Behavior: %d (%s)", 
                    (int)pThis->x, (int)pThis->y, pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
             pThis->SetState(YAWN);
             pThis->oldTargetX = pThis->targetX = pThis->logicX + SPRITE_SIZE * g_scale / 2.0;
@@ -1221,10 +1323,25 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
 
     DownloadMissingAssets();
 
-    for (int i = 0; i < g_catCount; ++i) {
+    if (g_randomThemes) {
+        // Ensure all official themes are downloaded so random selection has a pool
+        for (const auto& off : g_officialThemes) {
+            EnsureThemeDownloaded(off);
+        }
+    } else {
+        // Ensure custom pet themes are downloaded
+        for (const auto& pet : g_customPets) {
+            EnsureThemeDownloaded(pet.theme);
+        }
+    }
+
+    int targetCount = g_randomThemes ? g_catCount : (g_customPets.empty() ? g_catCount : (int)g_customPets.size());
+
+    for (int i = 0; i < targetCount; ++i) {
         Neko* pNeko = new Neko();
+        pNeko->assetPath = GetThemePathForPet(i);
         pNeko->Init();
-        if (g_catCount > 1) pNeko->behaviorMode = rand() % 5;
+        if (targetCount > 1) pNeko->behaviorMode = rand() % 5;
         g_Nekos.push_back(pNeko);
     }
     for (size_t i = 0; i < g_Nekos.size(); ++i) {
@@ -1233,11 +1350,6 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
     
     // Track the overlay HWND for the tool mod
     if (!g_Nekos.empty()) g_hwndOverlay = g_Nekos[0]->hwnd;
-    
-    // Signal that the window is ready
-    if (g_hWindowReady) {
-        SetEvent(g_hWindowReady);
-    }
 
     int intervalMs = 1000 / (g_fps > 0 ? g_fps : 60);
 
@@ -1276,22 +1388,60 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
             timerId = SetTimer(NULL, 1, intervalMs, UpdateAllCatsTimer);
             RegisterNekoKey();
             
-            while ((int)g_Nekos.size() < g_catCount) {
+            // Ensure main theme is downloaded
+            DownloadMissingAssets();
+            
+            if (g_randomThemes) {
+                // Ensure all official themes are downloaded
+                for (const auto& off : g_officialThemes) {
+                    EnsureThemeDownloaded(off);
+                }
+            } else {
+                // Ensure any custom selected themes in the pet list are downloaded
+                for (const auto& pet : g_customPets) {
+                    EnsureThemeDownloaded(pet.theme);
+                }
+            }
+
+            int currentTargetCount = g_randomThemes ? g_catCount : (g_customPets.empty() ? g_catCount : (int)g_customPets.size());
+
+            // Sync themes for existing Nekos if needed
+            for (size_t i = 0; i < g_Nekos.size() && i < (size_t)currentTargetCount; ++i) {
+                std::wstring newPath = GetThemePathForPet(i);
+                if (g_Nekos[i]->assetPath != newPath) {
+                    g_Nekos[i]->assetPath = newPath;
+                    g_Nekos[i]->LoadSprites();
+                }
+            }
+
+            // Spawn any new Nekos up to targetCount
+            while ((int)g_Nekos.size() < currentTargetCount) {
                 Neko* pNeko = new Neko();
+                pNeko->assetPath = GetThemePathForPet(g_Nekos.size());
                 pNeko->Init();
-                if (g_catCount > 1) pNeko->behaviorMode = rand() % 5;
+                if (currentTargetCount > 1) pNeko->behaviorMode = rand() % 5;
                 if (g_isHidden) ShowWindow(pNeko->hwnd, SW_HIDE);
                 g_Nekos.push_back(pNeko);
             }
-            while ((int)g_Nekos.size() > g_catCount) {
+            
+            // Trim excess Nekos if targetCount decreased
+            while ((int)g_Nekos.size() > currentTargetCount) {
                 Neko* pNeko = g_Nekos.back();
                 g_Nekos.pop_back();
                 pNeko->StopAudio();
                 delete pNeko;
             }
+            
             for (size_t i = 0; i < g_Nekos.size(); ++i) {
                 g_Nekos[i]->UpdateOffsets(i, g_Nekos.size());
+                
+                // Recalculate bounds and update size/scale variables for this pet
+                g_Nekos[i]->virtualX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+                g_Nekos[i]->virtualY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+                g_Nekos[i]->boundsWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN) - SPRITE_SIZE * g_scale;
+                g_Nekos[i]->boundsHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN) - SPRITE_SIZE * g_scale;
             }
+            
             if (!g_Nekos.empty()) g_hwndOverlay = g_Nekos[0]->hwnd;
         } else if (msg.message == WM_HOTKEY && msg.wParam == 1) {
             g_isHidden = !g_isHidden;
@@ -1303,7 +1453,7 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
                     pNeko->hasMouseMoved = false;
                 }
             }
-            Wh_Log(L"Neko Key toggled. IsHidden: %d", g_isHidden);
+            Wh_Log(L"Pet Key toggled. IsHidden: %d", g_isHidden);
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
@@ -1329,7 +1479,7 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
 //  Tool mod implementation
 // ─────────────────────────────────────────────
 void LoadSettings() {
-    PCWSTR themeStr = Wh_GetStringSetting(L"theme");
+    PCWSTR themeStr = Wh_GetStringSetting(L"AppearanceGroup.theme");
     if (themeStr) {
         g_theme = themeStr;
         Wh_FreeStringSetting(themeStr);
@@ -1339,19 +1489,34 @@ void LoadSettings() {
 
     WCHAR storagePath[MAX_PATH];
     if (Wh_GetModStoragePath(storagePath, ARRAYSIZE(storagePath))) {
-        g_assetPath = std::wstring(storagePath) + L"\\" + g_theme;
+        g_storagePath = storagePath;
+        g_assetPath = g_storagePath + L"\\" + g_theme;
     }
 
-    g_scale = Wh_GetIntSetting(L"scale");
-    g_speed = Wh_GetIntSetting(L"speed");
-    g_soundEnabled = Wh_GetIntSetting(L"sound") != 0;
-    g_sleepSoundInterval = Wh_GetIntSetting(L"sleep_sound_interval");
-    g_sleepSoundRepeat = Wh_GetIntSetting(L"sleep_sound_repeat") != 0;
-    g_fps = Wh_GetIntSetting(L"fps");
-    g_catCount = Wh_GetIntSetting(L"cat_count");
+    g_randomThemes = Wh_GetIntSetting(L"AppearanceGroup.random_themes") != 0;
+    g_scale = Wh_GetIntSetting(L"AppearanceGroup.scale");
+    g_speed = Wh_GetIntSetting(L"BehaviorGroup.speed");
+    g_soundEnabled = Wh_GetIntSetting(L"AudioGroup.sound") != 0;
+    g_sleepSoundInterval = Wh_GetIntSetting(L"AudioGroup.sleep_sound_interval");
+    g_sleepSoundRepeat = Wh_GetIntSetting(L"AudioGroup.sleep_sound_repeat") != 0;
+    g_fps = Wh_GetIntSetting(L"BehaviorGroup.fps");
+    g_catCount = Wh_GetIntSetting(L"AppearanceGroup.character_count");
     if (g_catCount < 1) g_catCount = 1;
 
-    PCWSTR nekoKeyStr = Wh_GetStringSetting(L"neko_key");
+    g_customPets.clear();
+    for (int i = 0; i < 100; i++) {
+        WCHAR key[64];
+        swprintf_s(key, L"AppearanceGroup.characterList[%d].theme", i);
+        PCWSTR themeVal = Wh_GetStringSetting(key);
+        if (!themeVal || themeVal[0] == L'\0') {
+            if (themeVal) Wh_FreeStringSetting(themeVal);
+            break;
+        }
+        g_customPets.push_back({ themeVal });
+        Wh_FreeStringSetting(themeVal);
+    }
+
+    PCWSTR nekoKeyStr = Wh_GetStringSetting(L"AdvancedGroup.neko_key");
     if (nekoKeyStr) {
         g_nekoKeyStr = nekoKeyStr;
         Wh_FreeStringSetting(nekoKeyStr);
@@ -1366,45 +1531,21 @@ BOOL WhTool_ModInit()
 
     LoadSettings();
 
-    g_hWindowReady = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    if (!g_hWindowReady) {
-        Wh_Log(L"CreateEvent failed");
-        return FALSE;
-    }
-
     g_hThread = CreateThread(nullptr, 0, NekoProcessThread, nullptr, 0, nullptr);
     if (!g_hThread) {
         Wh_Log(L"CreateThread failed");
-        CloseHandle(g_hWindowReady);
         return FALSE;
     }
 
-    // Wait for the window to be created
-    WaitForSingleObject(g_hWindowReady, 5000);
     return TRUE;
 }
 
 void WhTool_ModSettingsChanged()
 {
-    std::wstring oldTheme = g_theme;
     LoadSettings();
-    
-    if (oldTheme != g_theme) {
-        DownloadMissingAssets();
-        for (auto pNeko : g_Nekos) {
-            pNeko->LoadSprites();
-        }
-    }
 
     if (g_hThread) {
         PostThreadMessage(GetThreadId(g_hThread), WM_UPDATE_SETTINGS, 0, 0);
-    }
-    for (auto pNeko : g_Nekos) {
-        // Force bounds recalculation
-        pNeko->virtualX = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        pNeko->virtualY = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        pNeko->boundsWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN) - SPRITE_SIZE * g_scale;
-        pNeko->boundsHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN) - SPRITE_SIZE * g_scale;
     }
 }
 
@@ -1422,11 +1563,6 @@ void WhTool_ModUninit()
         CloseHandle(g_hThread);
         g_hThread = nullptr;
     }
-
-    if (g_hWindowReady) {
-        CloseHandle(g_hWindowReady);
-        g_hWindowReady = nullptr;
-    }
 }
 
 // ============================================================================
@@ -1436,7 +1572,7 @@ bool g_isToolModProcessLauncher;
 HANDLE g_toolModProcessMutex;
 
 void WINAPI EntryPoint_Hook() {
-    Wh_Log(L"Neko Cat: entry point hook triggered, exiting main thread.");
+    Wh_Log(L"Desktop Pet: entry point hook triggered, exiting main thread.");
     ExitThread(0);
 }
 
