@@ -20,7 +20,7 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 
 | Neko Cat (`neko-cat`) | Sakura (`sakura-icon`) | Tomoyo (`tomoyo-icon`) |
 | :---: | :---: | :---: |
-| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/refs/heads/main/previews/Neko-mod/Neko-cat.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/refs/heads/main/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/refs/heads/main/previews/Neko-mod/tomoyo-icon.gif) |
+| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/previews/Neko-mod/Neko-cat.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/previews/Neko-mod/tomoyo-icon.gif) |
 
 ---
 
@@ -73,7 +73,7 @@ Companions roam freely across **all your active monitors**! They seamlessly jump
 *   **Secure External Downloads**: All graphic spritesheets and audio files are fetched dynamically on first initialization using Windhawk's secure HTTPS `Wh_GetUrlContent` API.
 *   **Source Location**: Files are served directly from the official GitHub repository:
     *   **Repository Root**: [ciizerr/wh-mods on GitHub](https://github.com/ciizerr/wh-mods)
-    *   **Secure Assets Path**: `https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/`
+    *   **Secure Assets Path**:[Assets/](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/assets/)
 *   **Local Storage**: Downloaded assets are safely cached locally in your Windhawk `modstorage` folder for offline use.
 
 ---
@@ -331,12 +331,19 @@ bool EnsureFileExists(const std::wstring& localPath, const std::wstring& remoteU
 bool EnsureThemeDownloaded(const std::wstring& themeName) {
     if (themeName.empty()) return false;
     std::wstring themePath = g_storagePath + L"\\" + themeName;
+    
+    // Quick check to avoid repeated 404 HTTP requests for themes that lack optional sounds
+    std::wstring spritePath = themePath + L"\\spritesheet.png";
+    if (GetFileAttributesW(spritePath.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        return true; 
+    }
+
     CreatePath(themePath);
     CreatePath(themePath + L"\\sounds");
 
-    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/main/assets/" + themeName + L"/";
+    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/assets/" + themeName + L"/";
 
-    bool ok = EnsureFileExists(themePath + L"\\spritesheet.png", baseUrl + L"spritesheet.png");
+    bool ok = EnsureFileExists(spritePath, baseUrl + L"spritesheet.png");
     
     const wchar_t* audios[] = { L"awake.wav", L"sleep.wav", L"idle1.wav", L"idle2.wav", L"idle3.wav" };
     for (const wchar_t* au : audios) {
