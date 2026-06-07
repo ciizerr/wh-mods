@@ -1,7 +1,7 @@
 // ==WindhawkMod==
 // @id              neko-cat
 // @name            Desktop Companions
-// @description     Spawn multiple animated characters on your screen that interact with your windows and follow your cursor.
+// @description     Spawn multiple animated characters (neko cat, sakura, and tomoyo) on your screen that interact with your windows and follow your cursor.
 // @version         1.3.0
 // @author          ciizerr
 // @github          https://github.com/ciizerr
@@ -20,7 +20,7 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 
 | Neko Cat (`neko-cat`) | Sakura (`sakura-icon`) | Tomoyo (`tomoyo-icon`) |
 | :---: | :---: | :---: |
-| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/previews/Neko-mod/Neko-cat.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/previews/Neko-mod/tomoyo-icon.gif) |
+| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/Neko-cat.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/tomoyo-icon.gif) |
 
 ---
 
@@ -32,11 +32,6 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 *   **Dynamic Ram Cloning**: C++ slices the spritesheet in memory using GDI+ at startup, maintaining 100% logic and physics integrity.
 *   **Leak-Free Switcher**: Fixed a pre-existing memory leak when dynamically switching characters in settings.
 *   **Tidy Assets**: Individual assets are cleanly archived, making adding new desktop characters in the future a breeze.
-
-### 🎮 v1.2.0: Window Physics Update
-*   **Play With Window**: Characters climb active window sidebars, pace their roofs, and physically react to window edges sliding into them.
-*   **Multi-Companion Litters**: Spawn multiple characters with active separation physics so they roam independently without stacking.
-*   **Companion Key Shortcut**: Instantly toggle all characters on/off and mute sounds with custom keyboard shortcuts (e.g., `Ctrl+Alt+C`).
 
 ---
 
@@ -73,7 +68,7 @@ Companions roam freely across **all your active monitors**! They seamlessly jump
 *   **Secure External Downloads**: All graphic spritesheets and audio files are fetched dynamically on first initialization using Windhawk's secure HTTPS `Wh_GetUrlContent` API.
 *   **Source Location**: Files are served directly from the official GitHub repository:
     *   **Repository Root**: [ciizerr/wh-mods on GitHub](https://github.com/ciizerr/wh-mods)
-    *   **Secure Assets Path**:[Assets/](https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/assets/)
+    *   **Secure Assets Path**:[Assets/](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/assets/)
 *   **Local Storage**: Downloaded assets are safely cached locally in your Windhawk `modstorage` folder for offline use.
 
 ---
@@ -108,8 +103,8 @@ Enjoy your new friends!
           - neko-cat: Neko Cat
           - sakura-icon: Sakura
           - tomoyo-icon: Tomoyo
-    $name: Choose Characters From list.
-    $description: "You can choose different characters for each slot. The more you add, the more it will show on the screen. (Max recommended: 10 characters.)"
+    $name: Custom Character List
+    $description: "Choose the characters you want to appear. The total number on screen is controlled by 'Number of Characters' below. It will cycle through this list to fill the count."
   - scale: 2
     $name: Character Size
     $description: Changes how big the character is on your screen.
@@ -200,9 +195,7 @@ struct PetConfig {
 std::vector<PetConfig> g_customPets;
 const std::vector<std::wstring> g_officialThemes = { L"neko-cat", L"sakura-icon", L"tomoyo-icon" };
 
-std::wstring g_assetPath = L"";
 std::wstring g_storagePath = L"";
-std::wstring g_theme = L"neko-cat";
 bool g_randomThemes = true;
 int g_scale = 2;
 int g_speed = 24;
@@ -212,6 +205,9 @@ bool g_sleepSoundRepeat = true;
 int g_fps = 60;
 int g_catCount = 1;
 static bool g_modExit = false;
+
+// Forward declaration
+void LoadSettings();
 
 std::wstring g_nekoKeyStr = L"Ctrl+Alt+N";
 bool g_isHidden = false;
@@ -341,7 +337,7 @@ bool EnsureThemeDownloaded(const std::wstring& themeName) {
     CreatePath(themePath);
     CreatePath(themePath + L"\\sounds");
 
-    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/ce8ac771a568ea11a6c0c9aea68f43b6a5d944cf/assets/" + themeName + L"/";
+    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/assets/" + themeName + L"/";
 
     bool ok = EnsureFileExists(spritePath, baseUrl + L"spritesheet.png");
     
@@ -356,14 +352,14 @@ bool EnsureThemeDownloaded(const std::wstring& themeName) {
 }
 
 void DownloadMissingAssets() {
-    Wh_Log(L"Checking for missing assets in: %s", g_assetPath.c_str());
+    Wh_Log(L"Checking for missing assets in: %s", g_storagePath.c_str());
     
-    // Download active pet theme only when missing
-    EnsureThemeDownloaded(g_theme);
+    // Always ensure the default theme is downloaded for fallback
+    EnsureThemeDownloaded(L"neko-cat");
 }
 
 std::wstring GetRandomAvailableTheme() {
-    if (g_storagePath.empty()) return g_assetPath;
+    if (g_storagePath.empty()) return L"";
 
     std::vector<std::wstring> themes;
     WIN32_FIND_DATAW fd;
@@ -396,7 +392,7 @@ std::wstring GetThemePathForPet(int index) {
     }
 
     if (g_customPets.empty()) {
-        return g_assetPath;
+        return g_storagePath + L"\\neko-cat";
     }
     
     std::wstring chosenTheme = g_customPets[index % g_customPets.size()].theme;
@@ -561,29 +557,32 @@ public:
         Neko* pThis = (Neko*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         if (!pThis) return DefWindowProc(hwnd, msg, wp, lp);
 
-        if (msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN) {
-            if (pThis->behaviorMode != FORCED_SLEEP) {
-                if (pThis->state == SLEEP) {
-                    pThis->PlayAudio(L"awake.wav", false);
-                } else {
-                    const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" };
-                    pThis->PlayAudio(idles[rand() % 3], false);
-                }
-                pThis->SetState(AWAKE);
-                pThis->CycleBehavior();
-            }
-            SetForegroundWindow(hwnd);
-        } else if (msg == WM_NCRBUTTONDOWN || msg == WM_RBUTTONDOWN) {
+        if (msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN || msg == WM_NCLBUTTONDBLCLK || msg == WM_LBUTTONDBLCLK) {
             if (pThis->behaviorMode == FORCED_SLEEP || pThis->behaviorMode == EXHAUSTED_SLEEP) {
                 pThis->behaviorMode = pThis->prevBehaviorMode;
-                if (pThis->state == SLEEP || pThis->state == YAWN) {
-                    pThis->PlayAudio(L"awake.wav", false);
-                } else {
-                    const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" };
-                    pThis->PlayAudio(idles[rand() % 3], false);
-                }
+                if (pThis->state == SLEEP || pThis->state == YAWN) pThis->PlayAudio(L"awake.wav", false);
+                else { const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" }; pThis->PlayAudio(idles[rand() % 3], false); }
                 pThis->SetState(AWAKE);
+            } else {
+                if (pThis->state == SLEEP) pThis->PlayAudio(L"awake.wav", false);
+                else { const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" }; pThis->PlayAudio(idles[rand() % 3], false); }
+                pThis->SetState(AWAKE);
+                if (msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN) {
+                    pThis->CycleBehavior();
+                }
             }
+            SetForegroundWindow(hwnd);
+            
+            // Critical: Only return 0 for double clicks to prevent maximizing.
+            // For single clicks, we MUST let DefWindowProc handle it so dragging works!
+            if (msg == WM_NCLBUTTONDBLCLK || msg == WM_LBUTTONDBLCLK) return 0;
+        } else if (msg == WM_NCRBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_NCRBUTTONDBLCLK || msg == WM_RBUTTONDBLCLK) {
+            if (pThis->behaviorMode == FORCED_SLEEP || pThis->behaviorMode == EXHAUSTED_SLEEP) {
+                pThis->behaviorMode = pThis->prevBehaviorMode;
+            }
+            if (pThis->state == SLEEP || pThis->state == YAWN) pThis->PlayAudio(L"awake.wav", false);
+            else { const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" }; pThis->PlayAudio(idles[rand() % 3], false); }
+            pThis->SetState(AWAKE);
             return 0;
         } else if (msg == WM_ENTERSIZEMOVE) {
             pThis->isDragging = true;
@@ -600,7 +599,7 @@ public:
             
             pThis->prevBehaviorMode = pThis->behaviorMode;
             pThis->behaviorMode = FORCED_SLEEP;
-            Wh_Log(L"Pet dropped at %d, %d. Behavior: %d (%s)", 
+            Wh_Log(L"Character dropped at %d, %d. Behavior: %d (%s)", 
                    (int)pThis->x, (int)pThis->y, pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
             pThis->SetState(YAWN);
             pThis->oldTargetX = pThis->targetX = pThis->logicX + SPRITE_SIZE * g_scale / 2.0;
@@ -1342,7 +1341,7 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
         }
     }
 
-    int targetCount = g_randomThemes ? g_catCount : (g_customPets.empty() ? g_catCount : (int)g_customPets.size());
+    int targetCount = g_catCount;
 
     for (int i = 0; i < targetCount; ++i) {
         Neko* pNeko = new Neko();
@@ -1390,6 +1389,8 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
     MSG msg;
     while (!g_modExit && GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_UPDATE_SETTINGS) {
+            LoadSettings();
+            
             intervalMs = 1000 / (g_fps > 0 ? g_fps : 60);
             KillTimer(NULL, timerId);
             timerId = SetTimer(NULL, 1, intervalMs, UpdateAllCatsTimer);
@@ -1410,7 +1411,7 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
                 }
             }
 
-            int currentTargetCount = g_randomThemes ? g_catCount : (g_customPets.empty() ? g_catCount : (int)g_customPets.size());
+            int currentTargetCount = g_catCount;
 
             // Sync themes for existing Nekos if needed
             for (size_t i = 0; i < g_Nekos.size() && i < (size_t)currentTargetCount; ++i) {
@@ -1486,18 +1487,9 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
 //  Tool mod implementation
 // ─────────────────────────────────────────────
 void LoadSettings() {
-    PCWSTR themeStr = Wh_GetStringSetting(L"AppearanceGroup.theme");
-    if (themeStr) {
-        g_theme = themeStr;
-        Wh_FreeStringSetting(themeStr);
-    } else {
-        g_theme = L"neko-cat";
-    }
-
     WCHAR storagePath[MAX_PATH];
     if (Wh_GetModStoragePath(storagePath, ARRAYSIZE(storagePath))) {
         g_storagePath = storagePath;
-        g_assetPath = g_storagePath + L"\\" + g_theme;
     }
 
     g_randomThemes = Wh_GetIntSetting(L"AppearanceGroup.random_themes") != 0;
@@ -1524,18 +1516,19 @@ void LoadSettings() {
     }
 
     PCWSTR nekoKeyStr = Wh_GetStringSetting(L"AdvancedGroup.neko_key");
-    if (nekoKeyStr) {
+    if (nekoKeyStr && nekoKeyStr[0] != L'\0') {
         g_nekoKeyStr = nekoKeyStr;
-        Wh_FreeStringSetting(nekoKeyStr);
     } else {
         g_nekoKeyStr = L"";
     }
+    if (nekoKeyStr) Wh_FreeStringSetting(nekoKeyStr);
 }
 
 BOOL WhTool_ModInit()
 {
     Wh_Log(L"WhTool_ModInit called");
 
+    srand(GetTickCount());
     LoadSettings();
 
     g_hThread = CreateThread(nullptr, 0, NekoProcessThread, nullptr, 0, nullptr);
@@ -1549,8 +1542,6 @@ BOOL WhTool_ModInit()
 
 void WhTool_ModSettingsChanged()
 {
-    LoadSettings();
-
     if (g_hThread) {
         PostThreadMessage(GetThreadId(g_hThread), WM_UPDATE_SETTINGS, 0, 0);
     }
