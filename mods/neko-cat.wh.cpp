@@ -531,35 +531,47 @@ public:
         return virtualY + boundsHeight;
     }
 
+    bool IsRectInMonitors(double nx, double ny, int sz) {
+        POINT corners[4] = {
+            { (LONG)nx, (LONG)ny },
+            { (LONG)(nx + sz - 1), (LONG)ny },
+            { (LONG)nx, (LONG)(ny + sz - 1) },
+            { (LONG)(nx + sz - 1), (LONG)(ny + sz - 1) }
+        };
+        for (int i = 0; i < 4; i++) {
+            if (MonitorFromPoint(corners[i], MONITOR_DEFAULTTONULL) == NULL) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void ClampToMonitor(double& nx, double& ny, bool& wasOutside) {
         int sz = SPRITE_SIZE * g_scale;
         
-        POINT ptNew = { (LONG)(nx + sz/2.0), (LONG)(ny + sz - 1) };
-        HMONITOR hMonNew = MonitorFromPoint(ptNew, MONITOR_DEFAULTTONULL);
-        
-        if (hMonNew != NULL) {
+        if (IsRectInMonitors(nx, ny, sz)) {
             wasOutside = false;
             return;
         }
         
-        POINT ptX = { (LONG)(nx + sz/2.0), (LONG)(logicY + sz - 1) };
-        HMONITOR hMonX = MonitorFromPoint(ptX, MONITOR_DEFAULTTONULL);
+        bool okX = IsRectInMonitors(nx, logicY, sz);
+        bool okY = IsRectInMonitors(logicX, ny, sz);
         
-        POINT ptY = { (LONG)(logicX + sz/2.0), (LONG)(ny + sz - 1) };
-        HMONITOR hMonY = MonitorFromPoint(ptY, MONITOR_DEFAULTTONULL);
-        
-        if (hMonX != NULL && hMonY == NULL) {
+        if (okX && !okY) {
             ny = logicY;
             wasOutside = true;
-        } else if (hMonY != NULL && hMonX == NULL) {
+        } else if (okY && !okX) {
             nx = logicX;
             wasOutside = true;
         } else {
-            HMONITOR hMonCur = MonitorFromPoint({ (LONG)(logicX + sz/2.0), (LONG)(logicY + sz - 1) }, MONITOR_DEFAULTTONEAREST);
+            HMONITOR hMonCur = MonitorFromPoint({ (LONG)(logicX + sz/2.0), (LONG)(logicY + sz/2.0) }, MONITOR_DEFAULTTONEAREST);
             MONITORINFO mi = { sizeof(mi) };
             if (GetMonitorInfo(hMonCur, &mi)) {
                 nx = fmax((double)mi.rcMonitor.left, fmin((double)mi.rcMonitor.right - sz, nx));
                 ny = fmax((double)mi.rcMonitor.top, fmin((double)mi.rcMonitor.bottom - sz, ny));
+            } else {
+                nx = logicX;
+                ny = logicY;
             }
             wasOutside = true;
         }
@@ -1114,7 +1126,7 @@ public:
             cornerIndex = (cornerIndex + 1) % 4;
         }
         int sz = SPRITE_SIZE * g_scale;
-        HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + sz/2), (LONG)(logicY + sz/2) }, MONITOR_DEFAULTTONEAREST);
+        HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + sz/2.0), (LONG)(logicY + sz/2.0) }, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi = { sizeof(mi) };
         if (GetMonitorInfo(hMon, &mi)) {
             double corners[4][2] = {
@@ -1137,7 +1149,7 @@ public:
 
     void RunAround() {
         double bbox = g_speed * 8 * g_scale;
-        HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + SPRITE_SIZE * g_scale / 2), (LONG)(logicY + SPRITE_SIZE * g_scale / 2) }, MONITOR_DEFAULTTONEAREST);
+        HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + SPRITE_SIZE * g_scale / 2.0), (LONG)(logicY + SPRITE_SIZE * g_scale / 2.0) }, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi = { sizeof(mi) };
         if (GetMonitorInfo(hMon, &mi)) {
             if (ballX == -9999 && ballY == -9999) {
