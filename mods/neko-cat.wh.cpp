@@ -520,6 +520,51 @@ public:
         offsetY = (int)(sin(angle) * radius);
     }
 
+    double GetCurrentFloorY() {
+        int sz = SPRITE_SIZE * g_scale;
+        POINT pt = { (LONG)(logicX + sz / 2.0), (LONG)(logicY + sz / 2.0) };
+        HMONITOR hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi = { sizeof(mi) };
+        if (GetMonitorInfo(hMon, &mi)) {
+            return mi.rcMonitor.bottom - sz;
+        }
+        return virtualY + boundsHeight;
+    }
+
+    void ClampToMonitor(double& nx, double& ny, bool& wasOutside) {
+        int sz = SPRITE_SIZE * g_scale;
+        
+        POINT ptNew = { (LONG)(nx + sz/2.0), (LONG)(ny + sz - 1) };
+        HMONITOR hMonNew = MonitorFromPoint(ptNew, MONITOR_DEFAULTTONULL);
+        
+        if (hMonNew != NULL) {
+            wasOutside = false;
+            return;
+        }
+        
+        POINT ptX = { (LONG)(nx + sz/2.0), (LONG)(logicY + sz - 1) };
+        HMONITOR hMonX = MonitorFromPoint(ptX, MONITOR_DEFAULTTONULL);
+        
+        POINT ptY = { (LONG)(logicX + sz/2.0), (LONG)(ny + sz - 1) };
+        HMONITOR hMonY = MonitorFromPoint(ptY, MONITOR_DEFAULTTONULL);
+        
+        if (hMonX != NULL && hMonY == NULL) {
+            ny = logicY;
+            wasOutside = true;
+        } else if (hMonY != NULL && hMonX == NULL) {
+            nx = logicX;
+            wasOutside = true;
+        } else {
+            HMONITOR hMonCur = MonitorFromPoint({ (LONG)(logicX + sz/2.0), (LONG)(logicY + sz - 1) }, MONITOR_DEFAULTTONEAREST);
+            MONITORINFO mi = { sizeof(mi) };
+            if (GetMonitorInfo(hMonCur, &mi)) {
+                nx = fmax((double)mi.rcMonitor.left, fmin((double)mi.rcMonitor.right - sz, nx));
+                ny = fmax((double)mi.rcMonitor.top, fmin((double)mi.rcMonitor.bottom - sz, ny));
+            }
+            wasOutside = true;
+        }
+    }
+
     void Init() {
         virtualX = GetSystemMetrics(SM_XVIRTUALSCREEN);
         virtualY = GetSystemMetrics(SM_YVIRTUALSCREEN);
@@ -710,7 +755,8 @@ public:
         if (tickCount >= 9999) tickCount = 0;
         if (tickCount % 2 == 0) stateCount++;
 
-        if (logicY < virtualY + boundsHeight && (state == SLEEP || state == STOP || state == WASH || state == SCRATCH || state == YAWN) && behaviorMode == FORCED_SLEEP) {
+        double floorY = GetCurrentFloorY();
+        if (logicY < floorY && (state == SLEEP || state == STOP || state == WASH || state == SCRATCH || state == YAWN) && behaviorMode == FORCED_SLEEP) {
             // falling while in forced_sleep, gravity handled by ForcedSleep()
         }
 
@@ -757,13 +803,15 @@ public:
     }
 
     void ForcedSleep() {
-        if ((int)logicY < virtualY + boundsHeight) {
+        double floorY = GetCurrentFloorY();
+        if (logicY < floorY) {
             double fallSpeed = g_speed * 4.0 * g_scale;
             if (state != FALL) SetState(FALL);
-            logicY = std::min(logicY + fallSpeed, (double)(virtualY + boundsHeight));
+            logicY = std::min(logicY + fallSpeed, floorY);
             moveDX = moveDY = 0;
         } else {
             // Landed — do the yawn->sleep sequence
+            logicY = floorY;
             if (state == FALL) SetState(YAWN);
             else if (state == YAWN && stateCount >= YAWN_TIME) SetState(SLEEP);
             moveDX = moveDY = 0;
@@ -802,13 +850,15 @@ public:
 
         RECT r;
         playWindowValid = GetPlayWindow(r);
+        double floorY = GetCurrentFloorY();
 
         if (!playWindowValid) {
             // No window — fall to screen bottom
-            if ((int)logicY < virtualY + boundsHeight) {
+            if (logicY < floorY) {
                 if (state != FALL) SetState(FALL);
-                logicY = std::min(logicY + fallSpeed, (double)(virtualY + boundsHeight));
+                logicY = std::min(logicY + fallSpeed, floorY);
             } else {
+                logicY = floorY;
                 if (state == FALL) SetState(STOP);
             }
             moveDX = moveDY = 0;
@@ -862,7 +912,7 @@ public:
             double runSpeed = g_speed * (double)g_scale;
             // Target: cat's left edge flush with window left wall
             double wallX = r.left - sz;  // logicX target when at wall
-            bool onFloor  = std::abs(logicY - (virtualY + boundsHeight)) < 2.0;
+            bool onFloor  = std::abs(logicY - floorY) < 2.0;
             bool atWall   = std::abs(logicX - wallX) < runSpeed + 2.0;
 
             if (climbSide != -1) { climbSide = -1; climbRetries = 0; }
@@ -871,7 +921,7 @@ public:
                 if (!onFloor) {
                     // Still falling to floor
                     if (state != FALL) SetState(FALL);
-                    logicY = std::min(logicY + fallSpeed, (double)(virtualY + boundsHeight));
+                    logicY = std::min(logicY + fallSpeed, floorY);
                 } else {
                     // On floor — walk directly toward wall (no RunTowards)
                     if (climbOnFloor == false) {
@@ -925,7 +975,7 @@ public:
             double runSpeed = g_speed * (double)g_scale;
             // Target: cat's right edge flush with window right wall
             double wallX = (double)r.right;  // logicX target when at wall
-            bool onFloor  = std::abs(logicY - (virtualY + boundsHeight)) < 2.0;
+            bool onFloor  = std::abs(logicY - floorY) < 2.0;
             bool atWall   = std::abs(logicX - wallX) < runSpeed + 2.0;
 
             if (climbSide != 1) { climbSide = 1; climbRetries = 0; }
@@ -933,7 +983,7 @@ public:
             if (!atWall) {
                 if (!onFloor) {
                     if (state != FALL) SetState(FALL);
-                    logicY = std::min(logicY + fallSpeed, (double)(virtualY + boundsHeight));
+                    logicY = std::min(logicY + fallSpeed, floorY);
                 } else {
                     if (climbOnFloor == false) {
                         if (climbRetries >= 3) {
@@ -982,14 +1032,15 @@ public:
         // Never use RunTowards here — it triggers the sleep cycle.
         {
             double runSpeed = g_speed * (double)g_scale;
-            bool onFloor = std::abs(logicY - (virtualY + boundsHeight)) < 2.0;
+            bool onFloor = std::abs(logicY - floorY) < 2.0;
 
             if (!onFloor) {
                 // Fall to floor first
                 if (state != FALL) SetState(FALL);
-                logicY = std::min(logicY + fallSpeed, (double)(virtualY + boundsHeight));
+                logicY = std::min(logicY + fallSpeed, floorY);
             } else {
                 // On floor — move toward the nearer window edge
+                logicY = floorY;
                 if (state == FALL) SetState(STOP);
                 int catCX = (int)logicX + sz / 2;
                 double distToLeft  = catCX - r.left;
@@ -1063,34 +1114,69 @@ public:
             cornerIndex = (cornerIndex + 1) % 4;
         }
         int sz = SPRITE_SIZE * g_scale;
-        double corners[4][2] = {
-            { (double)virtualX + sz/2.0, (double)virtualY + sz },
-            { (double)virtualX + sz/2.0, (double)virtualY + boundsHeight + sz },
-            { (double)virtualX + boundsWidth + sz/2.0, (double)virtualY + boundsHeight + sz },
-            { (double)virtualX + boundsWidth + sz/2.0, (double)virtualY + sz }
-        };
-        RunTowards(corners[cornerIndex][0], corners[cornerIndex][1]);
+        HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + sz/2), (LONG)(logicY + sz/2) }, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi = { sizeof(mi) };
+        if (GetMonitorInfo(hMon, &mi)) {
+            double corners[4][2] = {
+                { (double)mi.rcMonitor.left + sz/2.0, (double)mi.rcMonitor.top + sz },
+                { (double)mi.rcMonitor.left + sz/2.0, (double)mi.rcMonitor.bottom },
+                { (double)mi.rcMonitor.right - sz/2.0, (double)mi.rcMonitor.bottom },
+                { (double)mi.rcMonitor.right - sz/2.0, (double)mi.rcMonitor.top + sz }
+            };
+            RunTowards(corners[cornerIndex][0], corners[cornerIndex][1]);
+        } else {
+            double corners[4][2] = {
+                { (double)virtualX + sz/2.0, (double)virtualY + sz },
+                { (double)virtualX + sz/2.0, (double)virtualY + boundsHeight + sz },
+                { (double)virtualX + boundsWidth + sz/2.0, (double)virtualY + boundsHeight + sz },
+                { (double)virtualX + boundsWidth + sz/2.0, (double)virtualY + sz }
+            };
+            RunTowards(corners[cornerIndex][0], corners[cornerIndex][1]);
+        }
     }
 
     void RunAround() {
         double bbox = g_speed * 8 * g_scale;
-        if (ballX == -9999 && ballY == -9999) {
-            ballX = virtualX + rand() % (boundsWidth - (int)bbox);
-            ballY = virtualY + rand() % (boundsHeight - (int)bbox);
-            ballVX = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
-            ballVY = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
-        }
-        ballX += ballVX;
-        ballY += ballVY;
-        if (ballX < virtualX + bbox) {
-            if (ballX > virtualX) ballVX++; else ballVX = -ballVX;
-        } else if (ballX > virtualX + boundsWidth - bbox) {
-            if (ballX < virtualX + boundsWidth) ballVX--; else ballVX = -ballVX;
-        }
-        if (ballY < virtualY + bbox) {
-            if (ballY > virtualY) ballVY++; else ballVY = -ballVY;
-        } else if (ballY > virtualY + boundsHeight - bbox) {
-            if (ballY < virtualY + boundsHeight) ballVY--; else ballVY = -ballVY;
+        HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + SPRITE_SIZE * g_scale / 2), (LONG)(logicY + SPRITE_SIZE * g_scale / 2) }, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi = { sizeof(mi) };
+        if (GetMonitorInfo(hMon, &mi)) {
+            if (ballX == -9999 && ballY == -9999) {
+                ballX = mi.rcMonitor.left + rand() % (mi.rcMonitor.right - mi.rcMonitor.left - (int)bbox);
+                ballY = mi.rcMonitor.top + rand() % (mi.rcMonitor.bottom - mi.rcMonitor.top - (int)bbox);
+                ballVX = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
+                ballVY = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
+            }
+            ballX += ballVX;
+            ballY += ballVY;
+            if (ballX < mi.rcMonitor.left + bbox) {
+                if (ballX > mi.rcMonitor.left) ballVX++; else ballVX = -ballVX;
+            } else if (ballX > mi.rcMonitor.right - bbox) {
+                if (ballX < mi.rcMonitor.right) ballVX--; else ballVX = -ballVX;
+            }
+            if (ballY < mi.rcMonitor.top + bbox) {
+                if (ballY > mi.rcMonitor.top) ballVY++; else ballVY = -ballVY;
+            } else if (ballY > mi.rcMonitor.bottom - bbox) {
+                if (ballY < mi.rcMonitor.bottom) ballVY--; else ballVY = -ballVY;
+            }
+        } else {
+            if (ballX == -9999 && ballY == -9999) {
+                ballX = virtualX + rand() % (boundsWidth - (int)bbox);
+                ballY = virtualY + rand() % (boundsHeight - (int)bbox);
+                ballVX = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
+                ballVY = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
+            }
+            ballX += ballVX;
+            ballY += ballVY;
+            if (ballX < virtualX + bbox) {
+                if (ballX > virtualX) ballVX++; else ballVX = -ballVX;
+            } else if (ballX > virtualX + boundsWidth - bbox) {
+                if (ballX < virtualX + boundsWidth) ballVX--; else ballVX = -ballVX;
+            }
+            if (ballY < virtualY + bbox) {
+                if (ballY > virtualY) ballVY++; else ballVY = -ballVY;
+            } else if (ballY > virtualY + boundsHeight - bbox) {
+                if (ballY < virtualY + boundsHeight) ballVY--; else ballVY = -ballVY;
+            }
         }
         RunTowards(ballX, ballY);
     }
@@ -1204,11 +1290,10 @@ public:
             case UL_MOVE: case UR_MOVE: case DL_MOVE: case DR_MOVE: {
                 double nx = logicX + moveDX;
                 double ny = logicY + moveDY;
-                bool wasOutside = nx <= virtualX || nx >= virtualX + boundsWidth || ny <= virtualY || ny >= virtualY + boundsHeight;
+                bool wasOutside = false;
+                ClampToMonitor(nx, ny, wasOutside);
                 CalcDirection(moveDX, moveDY);
                 
-                nx = fmax((double)virtualX, fmin((double)virtualX + boundsWidth, nx));
-                ny = fmax((double)virtualY, fmin((double)virtualY + boundsHeight, ny));
                 bool notMoved = nx == logicX && ny == logicY;
                 if (wasOutside && notMoved) SetState(STOP);
                 else { logicX = nx; logicY = ny; }
