@@ -2,7 +2,7 @@
 // @id              neko-cat
 // @name            Desktop Companions
 // @description     Spawn multiple animated characters (neko cat, sakura, and tomoyo) on your screen that interact with your windows and follow your cursor.
-// @version         1.3.0
+// @version         1.4.0
 // @author          ciizerr
 // @github          https://github.com/ciizerr
 // @include         windhawk.exe
@@ -18,9 +18,9 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 
 ## 🏃 Available Characters
 
-| Neko Cat (`neko-cat`) | Sakura (`sakura-icon`) | Tomoyo (`tomoyo-icon`) |
-| :---: | :---: | :---: |
-| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/Neko-cat.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/tomoyo-icon.gif) |
+| Neko Cat (`neko-cat`) | Neko Dog (`neko-dog`) | Sakura (`sakura-icon`) | Tomoyo (`tomoyo-icon`) |
+| :---: | :---: | :---: | :---: |
+| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/Neko-cat.gif) | ![Neko Dog](https://raw.githubusercontent.com/ciizerr/wh-mods/main/previews/Neko-mod/neko-dog.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/tomoyo-icon.gif) |
 
 ---
 
@@ -101,6 +101,7 @@ Enjoy your new friends!
         $description: Choose your desktop character.
         $options:
           - neko-cat: Neko Cat
+          - neko-dog: Neko Dog
           - sakura-icon: Sakura
           - tomoyo-icon: Tomoyo
     $name: Custom Character List
@@ -193,7 +194,7 @@ struct PetConfig {
 };
 
 std::vector<PetConfig> g_customPets;
-const std::vector<std::wstring> g_officialThemes = { L"neko-cat", L"sakura-icon", L"tomoyo-icon" };
+const std::vector<std::wstring> g_officialThemes = { L"neko-cat", L"sakura-icon", L"tomoyo-icon", L"neko-dog" };
 
 std::wstring g_storagePath = L"";
 bool g_randomThemes = true;
