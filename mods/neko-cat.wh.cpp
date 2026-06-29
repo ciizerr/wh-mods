@@ -20,7 +20,7 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 
 | Neko Cat (`neko-cat`) | Neko Dog (`neko-dog`) | Sakura (`sakura-icon`) | Tomoyo (`tomoyo-icon`) |
 | :---: | :---: | :---: | :---: |
-| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/Neko-cat.gif) | ![Neko Dog](https://raw.githubusercontent.com/ciizerr/wh-mods/main/previews/Neko-mod/neko-dog.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/tomoyo-icon.gif) |
+| ![Neko Cat](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/Neko-cat.gif) | ![Neko Dog](https://raw.githubusercontent.com/ciizerr/wh-mods/db8ca8c4e3247b01f1fbfb0aa8d1383d2211d13a/previews/Neko-mod/neko-dog.gif) | ![Sakura](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/previews/Neko-mod/tomoyo-icon.gif) |
 
 ---
 
@@ -37,8 +37,8 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 
 ## 🎮 How to Interact
 
-*   **Left-Click**: Cycles through all available movement behaviors.
-*   **Right-Click**: Wakes the character up instantly from naps.
+*   **Left-Click**: Wakes the character up or cycles through all available movement behaviors.
+*   **Right-Click**: Opens a context menu to instantly choose a specific movement behavior (and wakes them up).
 *   **Drag & Drop**: Pick up your companion and throw/drop them anywhere! They'll recover, yawn, take a brief sleep cycle, and wake up.
 *   **Window Nudging**: If sleeping on the floor, dragging a window boundary into them will gently slide them away and wake them up!
 
@@ -124,6 +124,9 @@ Enjoy your new friends!
   - fps: 60
     $name: Fluidity (FPS)
     $description: Smoothness of movement. Use 30 to save battery.
+  - save_behavior: true
+    $name: Save Last Behavior
+    $description: Remembers the last behavior when the mod or PC restarts.
   $name: Movement & Behavior
 
 - AudioGroup:
@@ -205,6 +208,7 @@ int g_sleepSoundInterval = 30;
 bool g_sleepSoundRepeat = true;
 int g_fps = 60;
 int g_catCount = 1;
+bool g_saveBehavior = true;
 static bool g_modExit = false;
 
 // Forward declaration
@@ -338,7 +342,7 @@ bool EnsureThemeDownloaded(const std::wstring& themeName) {
     CreatePath(themePath);
     CreatePath(themePath + L"\\sounds");
 
-    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/07dcad2878e35d697af51b42582e47c8e68a69ec/assets/" + themeName + L"/";
+    std::wstring baseUrl = L"https://raw.githubusercontent.com/ciizerr/wh-mods/db8ca8c4e3247b01f1fbfb0aa8d1383d2211d13a/assets/" + themeName + L"/";
 
     bool ok = EnsureFileExists(spritePath, baseUrl + L"spritesheet.png");
     
@@ -455,6 +459,54 @@ public:
 
     int offsetX = 0;
     int offsetY = 0;
+    int id = 0;
+
+    void SaveBehavior() {
+        extern bool g_saveBehavior;
+        if (!g_saveBehavior || g_storagePath.empty()) return;
+        std::wstring path = g_storagePath + L"\\behaviors.txt";
+        std::vector<int> behaviors;
+        FILE* fp;
+        if (_wfopen_s(&fp, path.c_str(), L"r") == 0) {
+            int mode;
+            while (fscanf_s(fp, "%d", &mode) == 1) {
+                behaviors.push_back(mode);
+            }
+            fclose(fp);
+        }
+        while (behaviors.size() <= (size_t)id) {
+            behaviors.push_back(CHASE_MOUSE);
+        }
+        behaviors[id] = behaviorMode;
+        if (_wfopen_s(&fp, path.c_str(), L"w") == 0) {
+            for (size_t i = 0; i < behaviors.size(); ++i) {
+                fprintf(fp, "%d ", behaviors[i]);
+            }
+            fclose(fp);
+        }
+    }
+
+    void LoadBehavior() {
+        extern bool g_saveBehavior;
+        if (!g_saveBehavior || g_storagePath.empty()) return;
+        std::wstring path = g_storagePath + L"\\behaviors.txt";
+        FILE* fp;
+        if (_wfopen_s(&fp, path.c_str(), L"r") == 0) {
+            int mode;
+            int currentIndex = 0;
+            while (fscanf_s(fp, "%d", &mode) == 1) {
+                if (currentIndex == id) {
+                    if (mode >= CHASE_MOUSE && mode < MAX_BEHAVIOR) {
+                        behaviorMode = mode;
+                        prevBehaviorMode = mode;
+                    }
+                    break;
+                }
+                currentIndex++;
+            }
+            fclose(fp);
+        }
+    }
 
     void LoadSprites() {
         // Free existing sprites if any (prevents memory leak on theme switch)
@@ -578,7 +630,8 @@ public:
         }
     }
 
-    void Init() {
+    void Init(int _id) {
+        id = _id;
         virtualX = GetSystemMetrics(SM_XVIRTUALSCREEN);
         virtualY = GetSystemMetrics(SM_YVIRTUALSCREEN);
         boundsWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN) - SPRITE_SIZE * g_scale;
@@ -634,13 +687,33 @@ public:
             // Critical: Only return 0 for double clicks to prevent maximizing.
             // For single clicks, we MUST let DefWindowProc handle it so dragging works!
             if (msg == WM_NCLBUTTONDBLCLK || msg == WM_LBUTTONDBLCLK) return 0;
-        } else if (msg == WM_NCRBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_NCRBUTTONDBLCLK || msg == WM_RBUTTONDBLCLK) {
-            if (pThis->behaviorMode == FORCED_SLEEP || pThis->behaviorMode == EXHAUSTED_SLEEP) {
-                pThis->behaviorMode = pThis->prevBehaviorMode;
+        } else if (msg == WM_NCRBUTTONUP || msg == WM_RBUTTONUP) {
+            HMENU hMenu = CreatePopupMenu();
+            AppendMenuW(hMenu, pThis->behaviorMode == CHASE_MOUSE ? MF_CHECKED : MF_STRING, 1000 + CHASE_MOUSE, L"Chase Mouse");
+            AppendMenuW(hMenu, pThis->behaviorMode == RUN_AWAY ? MF_CHECKED : MF_STRING, 1000 + RUN_AWAY, L"Run Away");
+            AppendMenuW(hMenu, pThis->behaviorMode == RANDOM ? MF_CHECKED : MF_STRING, 1000 + RANDOM, L"Random");
+            AppendMenuW(hMenu, pThis->behaviorMode == PACE ? MF_CHECKED : MF_STRING, 1000 + PACE, L"Pace");
+            AppendMenuW(hMenu, pThis->behaviorMode == RUN_AROUND ? MF_CHECKED : MF_STRING, 1000 + RUN_AROUND, L"Run Around");
+            AppendMenuW(hMenu, pThis->behaviorMode == PLAY_WITH_WINDOW ? MF_CHECKED : MF_STRING, 1000 + PLAY_WITH_WINDOW, L"Play With Window");
+            
+            POINT pt;
+            GetCursorPos(&pt);
+            SetForegroundWindow(hwnd);
+            TrackPopupMenu(hMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
+            DestroyMenu(hMenu);
+            return 0;
+        } else if (msg == WM_COMMAND) {
+            int cmd = LOWORD(wp);
+            if (cmd >= 1000 && cmd < 1000 + MAX_BEHAVIOR) {
+                pThis->behaviorMode = cmd - 1000;
+                pThis->prevBehaviorMode = pThis->behaviorMode;
+                Wh_Log(L"Behavior changed via menu to: %d (%s)", pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
+                pThis->SaveBehavior();
+                if (pThis->state == SLEEP || pThis->state == YAWN) {
+                    pThis->PlayAudio(L"awake.wav", false);
+                    pThis->SetState(AWAKE);
+                }
             }
-            if (pThis->state == SLEEP || pThis->state == YAWN) pThis->PlayAudio(L"awake.wav", false);
-            else { const wchar_t* idles[] = { L"idle1.wav", L"idle2.wav", L"idle3.wav" }; pThis->PlayAudio(idles[rand() % 3], false); }
-            pThis->SetState(AWAKE);
             return 0;
         } else if (msg == WM_ENTERSIZEMOVE) {
             pThis->isDragging = true;
@@ -655,13 +728,20 @@ public:
             pThis->prevLogicX = pThis->x;
             pThis->prevLogicY = pThis->y;
             
-            pThis->prevBehaviorMode = pThis->behaviorMode;
-            pThis->behaviorMode = FORCED_SLEEP;
-            Wh_Log(L"Character dropped at %d, %d. Behavior: %d (%s)", 
-                   (int)pThis->x, (int)pThis->y, pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
-            pThis->SetState(YAWN);
-            pThis->oldTargetX = pThis->targetX = pThis->logicX + SPRITE_SIZE * g_scale / 2.0;
-            pThis->oldTargetY = pThis->targetY = pThis->logicY + SPRITE_SIZE * g_scale;
+            if (pThis->behaviorMode == PLAY_WITH_WINDOW) {
+                pThis->prevBehaviorMode = pThis->behaviorMode;
+                pThis->behaviorMode = FORCED_SLEEP;
+                Wh_Log(L"Character dropped at %d, %d. Behavior: %d (%s)", 
+                       (int)pThis->x, (int)pThis->y, pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
+                pThis->SetState(YAWN);
+                pThis->oldTargetX = pThis->targetX = pThis->logicX + SPRITE_SIZE * g_scale / 2.0;
+                pThis->oldTargetY = pThis->targetY = pThis->logicY + SPRITE_SIZE * g_scale;
+            } else {
+                Wh_Log(L"Character dropped at %d, %d. Resuming behavior.", (int)pThis->x, (int)pThis->y);
+                pThis->SetState(AWAKE);
+                pThis->oldTargetX = pThis->targetX = pThis->logicX;
+                pThis->oldTargetY = pThis->targetY = pThis->logicY;
+            }
         } else if (msg == WM_NCHITTEST) {
             LRESULT hit = DefWindowProc(hwnd, msg, wp, lp);
             if (hit == HTCLIENT) return HTCAPTION;
@@ -684,6 +764,7 @@ public:
         prevBehaviorMode = behaviorMode;
         behaviorMode = nextMode;
         Wh_Log(L"Behavior changed to: %d (%s)", behaviorMode, GetBehaviorName(behaviorMode));
+        SaveBehavior();
         if (state == SLEEP) SetState(AWAKE);
     }
 
@@ -870,11 +951,27 @@ public:
             if (logicY < floorY) {
                 if (state != FALL) SetState(FALL);
                 logicY = std::min(logicY + fallSpeed, floorY);
+                moveDX = moveDY = 0;
             } else {
                 logicY = floorY;
-                if (state == FALL) SetState(STOP);
+                if (state == FALL) {
+                    SetState(STOP);
+                    actionCount = 0;
+                    targetX = logicX;
+                }
+                
+                actionCount++;
+                double nextTargetX = targetX;
+                if (actionCount > idleThreshold * (state == SLEEP ? 10 : 5) || targetX < virtualX || targetX > virtualX + boundsWidth) {
+                    actionCount = 0;
+                    if (boundsWidth > 0) {
+                        nextTargetX = virtualX + rand() % boundsWidth;
+                    } else {
+                        nextTargetX = virtualX;
+                    }
+                }
+                RunTowards(nextTargetX, floorY + sz);
             }
-            moveDX = moveDY = 0;
             return;
         }
 
@@ -892,15 +989,26 @@ public:
         // --- 1. Landed on top: snap and walk left/right ---
         if (landedOnTop && overWindowX) {
             logicY = r.top - sz; // hard snap
-            if (state == FALL) SetState(STOP);
-            if (moveDX == 0) moveDX = g_speed * g_scale;
-            double newX = logicX + moveDX;
-            if (newX < r.left)         { newX = r.left;        moveDX =  g_speed * g_scale; }
-            if (newX + sz > r.right)   { newX = r.right - sz;  moveDX = -g_speed * g_scale; }
-            logicX = newX;
-            moveDY = 0;
-            lastMoveDX = (int)moveDX; lastMoveDY = 0;
-            CalcDirection(moveDX, 0);
+            if (state == FALL) {
+                SetState(STOP);
+                actionCount = 0;
+                targetX = logicX;
+            }
+
+            actionCount++;
+            double nextTargetX = targetX;
+            // Wait before moving again, if sleeping wait much longer.
+            if (actionCount > idleThreshold * (state == SLEEP ? 10 : 5) || targetX < r.left || targetX > r.right - sz) {
+                actionCount = 0;
+                long windowWidth = r.right - r.left - sz;
+                if (windowWidth > 0) {
+                    nextTargetX = r.left + rand() % windowWidth;
+                } else {
+                    nextTargetX = r.left;
+                }
+            }
+
+            RunTowards(nextTargetX, logicY + sz);
             return;
         }
 
@@ -1111,15 +1219,14 @@ public:
     }
 
     void RunRandomly() {
-        if (state != SLEEP) actionCount++;
-        if (state != SLEEP && actionCount > idleThreshold * 20) {
+        actionCount++;
+        double nx = targetX, ny = targetY;
+        if (actionCount > idleThreshold * (state == SLEEP ? 15 : 20)) {
             actionCount = 0;
-            targetX = virtualX + rand() % (boundsWidth > 0 ? boundsWidth : 1);
-            targetY = virtualY + rand() % (boundsHeight > 0 ? boundsHeight : 1);
-            RunTowards(targetX, targetY);
-        } else {
-            RunTowards(targetX, targetY);
+            nx = virtualX + rand() % (boundsWidth > 0 ? boundsWidth : 1) + SPRITE_SIZE * g_scale / 2.0;
+            ny = virtualY + rand() % (boundsHeight > 0 ? boundsHeight : 1) + SPRITE_SIZE * g_scale;
         }
+        RunTowards(nx, ny);
     }
 
     void PaceAroundScreen() {
@@ -1444,8 +1551,9 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
     for (int i = 0; i < targetCount; ++i) {
         Neko* pNeko = new Neko();
         pNeko->assetPath = GetThemePathForPet(i);
-        pNeko->Init();
+        pNeko->Init(i);
         if (targetCount > 1) pNeko->behaviorMode = rand() % 5;
+        pNeko->LoadBehavior();
         g_Nekos.push_back(pNeko);
     }
     for (size_t i = 0; i < g_Nekos.size(); ++i) {
@@ -1524,8 +1632,9 @@ DWORD WINAPI NekoProcessThread(LPVOID param) {
             while ((int)g_Nekos.size() < currentTargetCount) {
                 Neko* pNeko = new Neko();
                 pNeko->assetPath = GetThemePathForPet(g_Nekos.size());
-                pNeko->Init();
+                pNeko->Init(g_Nekos.size());
                 if (currentTargetCount > 1) pNeko->behaviorMode = rand() % 5;
+                pNeko->LoadBehavior();
                 if (g_isHidden) ShowWindow(pNeko->hwnd, SW_HIDE);
                 g_Nekos.push_back(pNeko);
             }
@@ -1593,6 +1702,7 @@ void LoadSettings() {
     g_randomThemes = Wh_GetIntSetting(L"AppearanceGroup.random_themes") != 0;
     g_scale = Wh_GetIntSetting(L"AppearanceGroup.scale");
     g_speed = Wh_GetIntSetting(L"BehaviorGroup.speed");
+    g_saveBehavior = Wh_GetIntSetting(L"BehaviorGroup.save_behavior") != 0;
     g_soundEnabled = Wh_GetIntSetting(L"AudioGroup.sound") != 0;
     g_sleepSoundInterval = Wh_GetIntSetting(L"AudioGroup.sleep_sound_interval");
     g_sleepSoundRepeat = Wh_GetIntSetting(L"AudioGroup.sleep_sound_repeat") != 0;

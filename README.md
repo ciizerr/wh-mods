@@ -56,9 +56,9 @@ iwr -useb https://raw.githubusercontent.com/ciizerr/wh-mods/main/install-config.
 <summary><b>Desktop Pets Previews</b></summary>
 
 ### 🏃 Character Options
-| Neko Cat | Sakura | Tomoyo |
-| :---: | :---: | :---: |
-| ![Neko Cat](./previews/Neko-mod/Neko-cat.gif) | ![Sakura](./previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](./previews/Neko-mod/tomoyo-icon.gif) |
+| Neko Cat | Neko Dog | Sakura | Tomoyo |
+| :---: | :---: | :---: | :---: |
+| ![Neko Cat](./previews/Neko-mod/Neko-cat.gif) | ![Neko Dog](./previews/Neko-mod/neko-dog.gif) | ![Sakura](./previews/Neko-mod/sakura-icon.gif) | ![Tomoyo](./previews/Neko-mod/tomoyo-icon.gif) |
 
 ### 🎮 Mod Interaction Preview
 ![Neko Mod Interaction](https://raw.githubusercontent.com/ciizerr/wh-mods/2c1ecbf9ba9d0964e1a764a090cb2b7df729dc5c/previews/Neko-cat.gif)
