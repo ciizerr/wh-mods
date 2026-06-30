@@ -424,43 +424,64 @@ public:
     Bitmap* sprites[MAX_STATE][2] = {};
     std::wstring assetPath;
 
-    int behaviorMode = CHASE_MOUSE;
-    int prevBehaviorMode = CHASE_MOUSE;  // restored after FORCED_SLEEP
-    int idleThreshold = 6;
-    NekoState state = STOP;
-    int tickCount = 0;
-    int stateCount = 0;
-    
-    double x = 0, y = 0;
-    double logicX = 0, logicY = 0;
-    double prevLogicX = 0, prevLogicY = 0;
-    double targetX = 0, targetY = 0;
-    double oldTargetX = 0, oldTargetY = 0;
-    
-    int moveDX = 0, moveDY = 0;
-    int lastMoveDX = 0, lastMoveDY = 0;
+    // ==========================================
+    // --- 1. State & Behavior Variables ---
+    // ==========================================
+    int behaviorMode = CHASE_MOUSE;      // The current active behavior (e.g., CHASE_MOUSE, RUN_AWAY)
+    int prevBehaviorMode = CHASE_MOUSE;  // Stores previous behavior to restore after a forced event (like being dropped)
+    int idleThreshold = 6;               // How many pixels the mouse must move to wake the cat from an idle state
+    NekoState state = STOP;              // The precise current animation/logic state (e.g., WASH, L_MOVE, SCRATCH)
+    int tickCount = 0;                   // Raw logic tick counter, increments by 1 every tick
+    int stateCount = 0;                  // How many ticks the character has spent in the current state (increments every 2 ticks)
 
-    int virtualX = 0, virtualY = 0;
-    int boundsWidth = 1920, boundsHeight = 1080;
-    
-    int mouseX = 0, mouseY = 0;
-    bool hasMouseMoved = false;
+    // ==========================================
+    // --- 2. Physics & Position Variables ---
+    // ==========================================
+    double x = 0, y = 0;                 // Actual rendering coordinates on screen (interpolated for smoothness)
+    double logicX = 0, logicY = 0;       // Underlying logic coordinates tied to the 5 Hz physics tick
+    double prevLogicX = 0, prevLogicY = 0; // Previous logic coordinates (used for interpolation)
+    double targetX = 0, targetY = 0;     // The target destination coordinates (e.g., the mouse position)
+    double oldTargetX = 0, oldTargetY = 0; // The previous target destination (used to check if target moved)
+    int moveDX = 0, moveDY = 0;          // Current physical velocity in X and Y
+    int lastMoveDX = 0, lastMoveDY = 0;  // Previous physical velocity
 
-    double tickAccumulator = 0;
-    
-    int cornerIndex = 0;
-    double ballX = -9999, ballY = -9999;
-    double ballVX = 0, ballVY = 0;
-    int actionCount = 0;
+    // ==========================================
+    // --- 3. Screen & Bounds Variables ---
+    // ==========================================
+    int virtualX = 0, virtualY = 0;      // Top-left coordinates of the entire virtual screen (all monitors combined)
+    int boundsWidth = 1920, boundsHeight = 1080; // Total width and height of the virtual screen minus sprite size
 
-    bool isDragging = false;
-    ULONGLONG lastSleepSoundTime = 0;
-    bool hasPlayedSleepSound = false;
+    // ==========================================
+    // --- 4. Input & Render State ---
+    // ==========================================
+    int mouseX = 0, mouseY = 0;          // Cached mouse coordinates
+    bool hasMouseMoved = false;          // Flag indicating if the mouse has moved recently
+    double tickAccumulator = 0;          // Time accumulator used to decouple physics (5 Hz) from rendering (60+ FPS)
+    double animationFrameFloat = 0;      // Distance accumulator used to smoothly alternate leg animations
+    double renderLastX = -9999, renderLastY = -9999; // Previous render frame coordinates for calculating distance
+    bool isDragging = false;             // True if the user is currently dragging the character via the window title
 
-    int offsetX = 0;
-    int offsetY = 0;
-    int id = 0;
+    // ==========================================
+    // --- 5. Behavior-Specific Variables ---
+    // ==========================================
+    int cornerIndex = 0;                 // Used in PaceAroundScreen to track which corner it is heading to
+    double ballX = -9999, ballY = -9999; // Physics coordinates of the invisible bouncing ball (RunAround mode)
+    double ballVX = 0, ballVY = 0;       // Velocity of the invisible bouncing ball
+    int actionCount = 0;                 // General purpose counter for long-running behaviors (e.g. PlayWithWindow)
+    int offsetX = 0, offsetY = 0;        // Circular offset used when multiple cats swarm the mouse
 
+    // ==========================================
+    // --- 6. Audio Variables ---
+    // ==========================================
+    ULONGLONG lastSleepSoundTime = 0;    // Timestamp of the last sleep (snoring) sound played
+    bool hasPlayedSleepSound = false;    // Whether the sleep sound has already played (for non-repeating config)
+    int id = 0;                          // The unique index of this character in the litter
+
+    // ==========================================
+    // --- UTILITY & SETUP FUNCTIONS ---
+    // ==========================================
+
+    // Saves behaviorMode to behaviors.txt
     void SaveBehavior() {
         extern bool g_saveBehavior;
         if (!g_saveBehavior || g_storagePath.empty()) return;
@@ -486,6 +507,7 @@ public:
         }
     }
 
+    // Loads last saved behaviorMode from behaviors.txt
     void LoadBehavior() {
         extern bool g_saveBehavior;
         if (!g_saveBehavior || g_storagePath.empty()) return;
@@ -508,6 +530,7 @@ public:
         }
     }
 
+    // Slices spritesheet PNG into animation frames
     void LoadSprites() {
         // Free existing sprites if any (prevents memory leak on theme switch)
         for (int i = 0; i < MAX_STATE; i++) {
@@ -549,6 +572,7 @@ public:
         delete sheet;
     }
 
+    // Plays an audio file from the theme's sounds folder
     void PlayAudio(const wchar_t* file, bool loop) {
         if (!g_soundEnabled) return;
         std::wstring path = assetPath + L"\\sounds\\" + file;
@@ -557,10 +581,12 @@ public:
         if (loop) flags |= SND_LOOP;
         PlaySoundW(path.c_str(), NULL, flags);
     }
+    // Stops currently playing audio
     void StopAudio() {
         PlaySoundW(NULL, NULL, 0);
     }
 
+    // Calculates circular offset for swarm spawning
     void UpdateOffsets(int index, int total) {
         if (total <= 1) {
             offsetX = 0;
@@ -573,6 +599,7 @@ public:
         offsetY = (int)(sin(angle) * radius);
     }
 
+    // Gets absolute Y-coordinate of the floor below the character
     double GetCurrentFloorY() {
         int sz = SPRITE_SIZE * g_scale;
         POINT pt = { (LONG)(logicX + sz / 2.0), (LONG)(logicY + sz / 2.0) };
@@ -584,6 +611,7 @@ public:
         return virtualY + boundsHeight;
     }
 
+    // Checks if the character box is fully inside any active monitor
     bool IsRectInMonitors(double nx, double ny, int sz) {
         POINT corners[4] = {
             { (LONG)nx, (LONG)ny },
@@ -599,6 +627,7 @@ public:
         return true;
     }
 
+    // Prevents character from stepping outside monitor boundaries
     void ClampToMonitor(double& nx, double& ny, bool& wasOutside) {
         int sz = SPRITE_SIZE * g_scale;
         
@@ -630,6 +659,11 @@ public:
         }
     }
 
+    // ==========================================
+    // --- INITIALIZATION & WINDOW PROC ---
+    // ==========================================
+
+    // Initializes character, loads sprites, and creates window
     void Init(int _id) {
         id = _id;
         virtualX = GetSystemMetrics(SM_XVIRTUALSCREEN);
@@ -664,6 +698,7 @@ public:
         ShowWindow(hwnd, SW_SHOWNA);
     }
 
+    // Window procedure handling clicks, drags, and context menus
     static LRESULT CALLBACK NekoWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         Neko* pThis = (Neko*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         if (!pThis) return DefWindowProc(hwnd, msg, wp, lp);
@@ -750,6 +785,7 @@ public:
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // Cycles behavior mode on left-click
     void CycleBehavior() {
         if (behaviorMode == FORCED_SLEEP) return;
         int behaviors[] = {CHASE_MOUSE, RUN_AWAY, RANDOM, PACE, RUN_AROUND, PLAY_WITH_WINDOW};
@@ -768,6 +804,11 @@ public:
         if (state == SLEEP) SetState(AWAKE);
     }
 
+    // ==========================================
+    // --- MAIN LOOP & RENDERING ---
+    // ==========================================
+
+    // High FPS render loop: interpolates position and resolves collisions
     void Update() {
         POINT pt;
         GetCursorPos(&pt);
@@ -805,7 +846,14 @@ public:
         x = prevLogicX + (logicX - prevLogicX) * t;
         y = prevLogicY + (logicY - prevLogicY) * t;
 
-        // Smooth window collision resolution
+        ResolveWindowCollisions();
+
+        UpdateWindowPosition();
+    }
+
+    // Resolves physics collisions when the character bumps into the active window
+    // while in PLAY_WITH_WINDOW or EXHAUSTED_SLEEP modes.
+    void ResolveWindowCollisions() {
         if (!isDragging && (behaviorMode == PLAY_WITH_WINDOW || behaviorMode == EXHAUSTED_SLEEP)) {
             RECT r;
             if (GetPlayWindow(r)) {
@@ -840,10 +888,13 @@ public:
                 }
             }
         }
-
-        UpdateWindowPosition();
     }
 
+    // ==========================================
+    // --- PHYSICS TICK & STATE MACHINE ---
+    // ==========================================
+
+    // 5Hz logic tick: processes behaviors, timers, and sounds
     void ProcessOriginalTick() {
         tickCount++;
         if (tickCount >= 9999) tickCount = 0;
@@ -896,6 +947,11 @@ public:
         }
     }
 
+    // ==========================================
+    // --- BEHAVIOR IMPLEMENTATIONS ---
+    // ==========================================
+
+    // Behavior: Fall and sleep when dropped
     void ForcedSleep() {
         double floorY = GetCurrentFloorY();
         if (logicY < floorY) {
@@ -923,6 +979,7 @@ public:
     int  climbSide     = 0;
     bool climbOnFloor  = false;
 
+    // Finds an active, non-maximized window to interact with
     bool GetPlayWindow(RECT& out) {
         HWND hw = GetForegroundWindow();
         if (!hw || hw == GetDesktopWindow() || hw == GetShellWindow() || hw == hwnd) return false;
@@ -937,6 +994,7 @@ public:
         return true;
     }
 
+    // Behavior: Interact with the currently active window
     void PlayWithWindow() {
         int sz = SPRITE_SIZE * g_scale;
         double fallSpeed = g_speed * 4.0 * g_scale;
@@ -1185,6 +1243,7 @@ public:
         }
     }
 
+    // Behavior: Chase the mouse cursor
     void ChaseMouse() {
         if (!hasMouseMoved) {
             RunTowards(logicX + SPRITE_SIZE * g_scale / 2.0, logicY + SPRITE_SIZE * g_scale);
@@ -1193,6 +1252,7 @@ public:
         RunTowards(mouseX + offsetX, mouseY + offsetY);
     }
 
+    // Behavior: Run away from the mouse cursor
     void RunAwayFromMouse() {
         if (!hasMouseMoved) {
             RunTowards(logicX + SPRITE_SIZE * g_scale / 2.0, logicY + SPRITE_SIZE * g_scale);
@@ -1218,6 +1278,7 @@ public:
         }
     }
 
+    // Behavior: Run to random screen locations
     void RunRandomly() {
         actionCount++;
         double nx = targetX, ny = targetY;
@@ -1229,6 +1290,7 @@ public:
         RunTowards(nx, ny);
     }
 
+    // Behavior: Patrol the screen borders
     void PaceAroundScreen() {
         if (lastMoveDX == 0 && lastMoveDY == 0) {
             cornerIndex = (cornerIndex + 1) % 4;
@@ -1255,6 +1317,7 @@ public:
         }
     }
 
+    // Behavior: Chase a bouncing invisible ball
     void RunAround() {
         double bbox = g_speed * 8 * g_scale;
         HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + SPRITE_SIZE * g_scale / 2.0), (LONG)(logicY + SPRITE_SIZE * g_scale / 2.0) }, MONITOR_DEFAULTTONEAREST);
@@ -1269,14 +1332,14 @@ public:
             ballX += ballVX;
             ballY += ballVY;
             if (ballX < mi.rcMonitor.left + bbox) {
-                if (ballX > mi.rcMonitor.left) ballVX++; else ballVX = -ballVX;
+                if (ballX > mi.rcMonitor.left) ballVX++; else ballVX = std::abs(ballVX);
             } else if (ballX > mi.rcMonitor.right - bbox) {
-                if (ballX < mi.rcMonitor.right) ballVX--; else ballVX = -ballVX;
+                if (ballX < mi.rcMonitor.right) ballVX--; else ballVX = -std::abs(ballVX);
             }
             if (ballY < mi.rcMonitor.top + bbox) {
-                if (ballY > mi.rcMonitor.top) ballVY++; else ballVY = -ballVY;
+                if (ballY > mi.rcMonitor.top) ballVY++; else ballVY = std::abs(ballVY);
             } else if (ballY > mi.rcMonitor.bottom - bbox) {
-                if (ballY < mi.rcMonitor.bottom) ballVY--; else ballVY = -ballVY;
+                if (ballY < mi.rcMonitor.bottom) ballVY--; else ballVY = -std::abs(ballVY);
             }
         } else {
             if (ballX == -9999 && ballY == -9999) {
@@ -1288,19 +1351,20 @@ public:
             ballX += ballVX;
             ballY += ballVY;
             if (ballX < virtualX + bbox) {
-                if (ballX > virtualX) ballVX++; else ballVX = -ballVX;
+                if (ballX > virtualX) ballVX++; else ballVX = std::abs(ballVX);
             } else if (ballX > virtualX + boundsWidth - bbox) {
-                if (ballX < virtualX + boundsWidth) ballVX--; else ballVX = -ballVX;
+                if (ballX < virtualX + boundsWidth) ballVX--; else ballVX = -std::abs(ballVX);
             }
             if (ballY < virtualY + bbox) {
-                if (ballY > virtualY) ballVY++; else ballVY = -ballVY;
+                if (ballY > virtualY) ballVY++; else ballVY = std::abs(ballVY);
             } else if (ballY > virtualY + boundsHeight - bbox) {
-                if (ballY < virtualY + boundsHeight) ballVY--; else ballVY = -ballVY;
+                if (ballY < virtualY + boundsHeight) ballVY--; else ballVY = -std::abs(ballVY);
             }
         }
         RunTowards(ballX, ballY);
     }
 
+    // Updates logic state and handles transitions
     void SetState(NekoState newState) {
         if (state == SLEEP && newState != SLEEP) {
             StopAudio();
@@ -1320,6 +1384,7 @@ public:
         state = newState;
     }
 
+    // Calculates the 16-way movement state based on dx/dy
     void CalcDirection(double dx, double dy) {
         NekoState newState;
         if (dx == 0 && dy == 0) {
@@ -1347,6 +1412,7 @@ public:
         if (state != newState) SetState(newState);
     }
 
+    // Moves the character towards a target (tx, ty) and handles idle states
     void RunTowards(double tx, double ty) {
         oldTargetX = targetX; oldTargetY = targetY;
         targetX = tx; targetY = ty;
@@ -1380,11 +1446,22 @@ public:
             case STOP:
                 if (moveStart) SetState(AWAKE);
                 else if (stateCount >= STOP_TIME) {
-                    if (moveDX < 0 && logicX <= 0) SetState(L_CLAW);
-                    else if (moveDX > 0 && logicX >= boundsWidth) SetState(R_CLAW);
-                    else if (moveDY < 0 && logicY <= 0) SetState(U_CLAW);
-                    else if (moveDY > 0 && logicY >= boundsHeight) SetState(D_CLAW);
-                    else SetState(WASH);
+                    int sz = SPRITE_SIZE * g_scale;
+                    HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + sz/2.0), (LONG)(logicY + sz/2.0) }, MONITOR_DEFAULTTONEAREST);
+                    MONITORINFO mi = { sizeof(mi) };
+                    if (GetMonitorInfo(hMon, &mi)) {
+                        if ((moveDX < 0 || targetX <= mi.rcMonitor.left + 5.0) && logicX <= mi.rcMonitor.left + 1.0) SetState(L_CLAW);
+                        else if ((moveDX > 0 || targetX + sz >= mi.rcMonitor.right - 5.0) && logicX + sz >= mi.rcMonitor.right - 1.0) SetState(R_CLAW);
+                        else if ((moveDY < 0 || targetY <= mi.rcMonitor.top + 5.0) && logicY <= mi.rcMonitor.top + 1.0) SetState(U_CLAW);
+                        else if ((moveDY > 0 || targetY + sz >= mi.rcMonitor.bottom - 5.0) && logicY + sz >= mi.rcMonitor.bottom - 1.0) SetState(D_CLAW);
+                        else SetState(WASH);
+                    } else {
+                        if ((moveDX < 0 || targetX <= virtualX + 5.0) && logicX <= virtualX + 1.0) SetState(L_CLAW);
+                        else if ((moveDX > 0 || targetX + sz >= virtualX + boundsWidth - 5.0) && logicX + sz >= virtualX + boundsWidth - 1.0) SetState(R_CLAW);
+                        else if ((moveDY < 0 || targetY <= virtualY + 5.0) && logicY <= virtualY + 1.0) SetState(U_CLAW);
+                        else if ((moveDY > 0 || targetY + sz >= virtualY + boundsHeight - 5.0) && logicY + sz >= virtualY + boundsHeight - 1.0) SetState(D_CLAW);
+                        else SetState(WASH);
+                    }
                 }
                 break;
             case WASH:
@@ -1435,9 +1512,31 @@ public:
     int lastUpdateScale = -1;
 
     void UpdateWindowPosition() {
+        if (renderLastX == -9999) {
+            renderLastX = x;
+            renderLastY = y;
+        }
+        
+        double deltaX = x - renderLastX;
+        double deltaY = y - renderLastY;
+        double distanceMovedThisFrame = sqrt(deltaX * deltaX + deltaY * deltaY);
+        renderLastX = x;
+        renderLastY = y;
+
         int frameObj = 0;
-        if (state == SLEEP) frameObj = (tickCount >> 2) & 1;
-        else frameObj = tickCount & 1;
+        bool isMoving = (state >= U_MOVE && state <= DR_MOVE) || state == FALL;
+        
+        if (isMoving) {
+            // Legs toggle every 16 physical pixels (scaled)
+            animationFrameFloat += distanceMovedThisFrame / (16.0 * g_scale);
+            frameObj = (int)animationFrameFloat & 1;
+        } else if (state == SLEEP) {
+            frameObj = (tickCount >> 2) & 1;
+            animationFrameFloat = 0;
+        } else {
+            frameObj = tickCount & 1;
+            animationFrameFloat = 0;
+        }
 
         if (lastUpdateX == x && lastUpdateY == y && lastUpdateFrame == frameObj && lastUpdateState == state && lastUpdateScale == g_scale) {
             return;
