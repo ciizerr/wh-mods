@@ -1,3 +1,4 @@
 ./nekojs-reference
 .agent/
+.agents/
 .vscode/
