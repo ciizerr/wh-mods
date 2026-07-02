@@ -24,17 +24,6 @@ Cute animated characters that follow your mouse, run around your screen, and cli
 
 ---
 
-## ✨ Release Highlights
-
-### 🚀 v1.3.0: Spritesheet Architecture & Diversity Update (Latest)
-*   **High-Performance Texture Slicing**: Replaced 38 individual PNG file downloads with a single transparent spritesheet PNG. Disk/network checks are now **97% faster**!
-*   **Diverse Litters**: Added a new setting to spawn a randomized mix of all downloaded characters at once!
-*   **Dynamic Ram Cloning**: C++ slices the spritesheet in memory using GDI+ at startup, maintaining 100% logic and physics integrity.
-*   **Leak-Free Switcher**: Fixed a pre-existing memory leak when dynamically switching characters in settings.
-*   **Tidy Assets**: Individual assets are cleanly archived, making adding new desktop characters in the future a breeze.
-
----
-
 ## 🎮 How to Interact
 
 *   **Left-Click**: Wakes the character up or cycles through all available movement behaviors.
@@ -156,6 +145,8 @@ Enjoy your new friends!
 #include <string>
 #include <cmath>
 #include <vector>
+#include <cstdio>
+#include <algorithm>
 
 using namespace Gdiplus;
 
@@ -481,52 +472,23 @@ public:
     // --- UTILITY & SETUP FUNCTIONS ---
     // ==========================================
 
-    // Saves behaviorMode to behaviors.txt
+    // Saves behaviorMode using Windhawk persistence
     void SaveBehavior() {
         extern bool g_saveBehavior;
-        if (!g_saveBehavior || g_storagePath.empty()) return;
-        std::wstring path = g_storagePath + L"\\behaviors.txt";
-        std::vector<int> behaviors;
-        FILE* fp;
-        if (_wfopen_s(&fp, path.c_str(), L"r") == 0) {
-            int mode;
-            while (fscanf_s(fp, "%d", &mode) == 1) {
-                behaviors.push_back(mode);
-            }
-            fclose(fp);
-        }
-        while (behaviors.size() <= (size_t)id) {
-            behaviors.push_back(CHASE_MOUSE);
-        }
-        behaviors[id] = behaviorMode;
-        if (_wfopen_s(&fp, path.c_str(), L"w") == 0) {
-            for (size_t i = 0; i < behaviors.size(); ++i) {
-                fprintf(fp, "%d ", behaviors[i]);
-            }
-            fclose(fp);
-        }
+        if (!g_saveBehavior) return;
+        std::wstring key = L"behavior_" + std::to_wstring(id);
+        Wh_SetIntValue(key.c_str(), behaviorMode);
     }
 
-    // Loads last saved behaviorMode from behaviors.txt
+    // Loads last saved behaviorMode from Windhawk storage
     void LoadBehavior() {
         extern bool g_saveBehavior;
-        if (!g_saveBehavior || g_storagePath.empty()) return;
-        std::wstring path = g_storagePath + L"\\behaviors.txt";
-        FILE* fp;
-        if (_wfopen_s(&fp, path.c_str(), L"r") == 0) {
-            int mode;
-            int currentIndex = 0;
-            while (fscanf_s(fp, "%d", &mode) == 1) {
-                if (currentIndex == id) {
-                    if (mode >= CHASE_MOUSE && mode < MAX_BEHAVIOR) {
-                        behaviorMode = mode;
-                        prevBehaviorMode = mode;
-                    }
-                    break;
-                }
-                currentIndex++;
-            }
-            fclose(fp);
+        if (!g_saveBehavior) return;
+        std::wstring key = L"behavior_" + std::to_wstring(id);
+        int mode = Wh_GetIntValue(key.c_str(), CHASE_MOUSE);
+        if (mode >= CHASE_MOUSE && mode <= PLAY_WITH_WINDOW) {
+            behaviorMode = mode;
+            prevBehaviorMode = mode;
         }
     }
 
@@ -724,12 +686,12 @@ public:
             if (msg == WM_NCLBUTTONDBLCLK || msg == WM_LBUTTONDBLCLK) return 0;
         } else if (msg == WM_NCRBUTTONUP || msg == WM_RBUTTONUP) {
             HMENU hMenu = CreatePopupMenu();
-            AppendMenuW(hMenu, pThis->behaviorMode == CHASE_MOUSE ? MF_CHECKED : MF_STRING, 1000 + CHASE_MOUSE, L"Chase Mouse");
-            AppendMenuW(hMenu, pThis->behaviorMode == RUN_AWAY ? MF_CHECKED : MF_STRING, 1000 + RUN_AWAY, L"Run Away");
-            AppendMenuW(hMenu, pThis->behaviorMode == RANDOM ? MF_CHECKED : MF_STRING, 1000 + RANDOM, L"Random");
-            AppendMenuW(hMenu, pThis->behaviorMode == PACE ? MF_CHECKED : MF_STRING, 1000 + PACE, L"Pace");
-            AppendMenuW(hMenu, pThis->behaviorMode == RUN_AROUND ? MF_CHECKED : MF_STRING, 1000 + RUN_AROUND, L"Run Around");
-            AppendMenuW(hMenu, pThis->behaviorMode == PLAY_WITH_WINDOW ? MF_CHECKED : MF_STRING, 1000 + PLAY_WITH_WINDOW, L"Play With Window");
+            AppendMenuW(hMenu, MF_STRING | (pThis->behaviorMode == CHASE_MOUSE ? MF_CHECKED : 0), 1000 + CHASE_MOUSE, L"Chase Mouse");
+            AppendMenuW(hMenu, MF_STRING | (pThis->behaviorMode == RUN_AWAY ? MF_CHECKED : 0), 1000 + RUN_AWAY, L"Run Away");
+            AppendMenuW(hMenu, MF_STRING | (pThis->behaviorMode == RANDOM ? MF_CHECKED : 0), 1000 + RANDOM, L"Random");
+            AppendMenuW(hMenu, MF_STRING | (pThis->behaviorMode == PACE ? MF_CHECKED : 0), 1000 + PACE, L"Pace");
+            AppendMenuW(hMenu, MF_STRING | (pThis->behaviorMode == RUN_AROUND ? MF_CHECKED : 0), 1000 + RUN_AROUND, L"Run Around");
+            AppendMenuW(hMenu, MF_STRING | (pThis->behaviorMode == PLAY_WITH_WINDOW ? MF_CHECKED : 0), 1000 + PLAY_WITH_WINDOW, L"Play With Window");
             
             POINT pt;
             GetCursorPos(&pt);
@@ -742,6 +704,9 @@ public:
             if (cmd >= 1000 && cmd < 1000 + MAX_BEHAVIOR) {
                 pThis->behaviorMode = cmd - 1000;
                 pThis->prevBehaviorMode = pThis->behaviorMode;
+                pThis->actionCount = 0;
+                pThis->ballX = -9999;
+                pThis->ballY = -9999;
                 Wh_Log(L"Behavior changed via menu to: %d (%s)", pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
                 pThis->SaveBehavior();
                 if (pThis->state == SLEEP || pThis->state == YAWN) {
@@ -769,6 +734,10 @@ public:
                 Wh_Log(L"Character dropped at %d, %d. Behavior: %d (%s)", 
                        (int)pThis->x, (int)pThis->y, pThis->behaviorMode, GetBehaviorName(pThis->behaviorMode));
                 pThis->SetState(YAWN);
+                pThis->oldTargetX = pThis->targetX = pThis->logicX + SPRITE_SIZE * g_scale / 2.0;
+                pThis->oldTargetY = pThis->targetY = pThis->logicY + SPRITE_SIZE * g_scale;
+            } else if (pThis->behaviorMode == FORCED_SLEEP || pThis->behaviorMode == EXHAUSTED_SLEEP) {
+                Wh_Log(L"Character dropped at %d, %d while sleeping. Continuing sleep.", (int)pThis->x, (int)pThis->y);
                 pThis->oldTargetX = pThis->targetX = pThis->logicX + SPRITE_SIZE * g_scale / 2.0;
                 pThis->oldTargetY = pThis->targetY = pThis->logicY + SPRITE_SIZE * g_scale;
             } else {
@@ -799,6 +768,9 @@ public:
         }
         prevBehaviorMode = behaviorMode;
         behaviorMode = nextMode;
+        actionCount = 0;
+        ballX = -9999;
+        ballY = -9999;
         Wh_Log(L"Behavior changed to: %d (%s)", behaviorMode, GetBehaviorName(behaviorMode));
         SaveBehavior();
         if (state == SLEEP) SetState(AWAKE);
@@ -1317,48 +1289,92 @@ public:
         }
     }
 
-    // Behavior: Chase a bouncing invisible ball
+    // Behavior: Chase a bouncing invisible ball (with natural rest breaks)
     void RunAround() {
-        double bbox = g_speed * 8 * g_scale;
+        actionCount++;
+        if (actionCount >= 300) {
+            actionCount = 0;
+            if (state == SLEEP || state == YAWN) {
+                PlayAudio(L"awake.wav", false);
+                SetState(AWAKE);
+            }
+        }
+
+        // After chasing for ~45 seconds (225 ticks), take a ~15 second nap break!
+        if (actionCount > 225) {
+            RunTowards(logicX + SPRITE_SIZE * g_scale / 2.0, logicY + SPRITE_SIZE * g_scale);
+            return;
+        }
+
+        double bbox = SPRITE_SIZE * g_scale;
+        double ballSpeed = g_speed * g_scale * 1.3;
         HMONITOR hMon = MonitorFromPoint({ (LONG)(logicX + SPRITE_SIZE * g_scale / 2.0), (LONG)(logicY + SPRITE_SIZE * g_scale / 2.0) }, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi = { sizeof(mi) };
         if (GetMonitorInfo(hMon, &mi)) {
             if (ballX == -9999 && ballY == -9999) {
-                ballX = mi.rcMonitor.left + rand() % (mi.rcMonitor.right - mi.rcMonitor.left - (int)bbox);
-                ballY = mi.rcMonitor.top + rand() % (mi.rcMonitor.bottom - mi.rcMonitor.top - (int)bbox);
-                ballVX = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
-                ballVY = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
+                ballX = mi.rcMonitor.left + rand() % (std::max(1, (int)(mi.rcMonitor.right - mi.rcMonitor.left - bbox * 2))) + bbox;
+                ballY = mi.rcMonitor.top + rand() % (std::max(1, (int)(mi.rcMonitor.bottom - mi.rcMonitor.top - bbox * 2))) + bbox;
+                double angle = ((rand() % 360) * 3.1415926535) / 180.0;
+                ballVX = cos(angle) * ballSpeed;
+                ballVY = sin(angle) * ballSpeed;
             }
             ballX += ballVX;
             ballY += ballVY;
             if (ballX < mi.rcMonitor.left + bbox) {
-                if (ballX > mi.rcMonitor.left) ballVX++; else ballVX = std::abs(ballVX);
+                ballX = mi.rcMonitor.left + bbox;
+                ballVX = std::abs(ballVX);
+                ballVY += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
             } else if (ballX > mi.rcMonitor.right - bbox) {
-                if (ballX < mi.rcMonitor.right) ballVX--; else ballVX = -std::abs(ballVX);
+                ballX = mi.rcMonitor.right - bbox;
+                ballVX = -std::abs(ballVX);
+                ballVY += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
             }
             if (ballY < mi.rcMonitor.top + bbox) {
-                if (ballY > mi.rcMonitor.top) ballVY++; else ballVY = std::abs(ballVY);
+                ballY = mi.rcMonitor.top + bbox;
+                ballVY = std::abs(ballVY);
+                ballVX += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
             } else if (ballY > mi.rcMonitor.bottom - bbox) {
-                if (ballY < mi.rcMonitor.bottom) ballVY--; else ballVY = -std::abs(ballVY);
+                ballY = mi.rcMonitor.bottom - bbox;
+                ballVY = -std::abs(ballVY);
+                ballVX += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
+            }
+            double currentSpeed = sqrt(ballVX * ballVX + ballVY * ballVY);
+            if (currentSpeed > 0.001) {
+                ballVX = (ballVX / currentSpeed) * ballSpeed;
+                ballVY = (ballVY / currentSpeed) * ballSpeed;
             }
         } else {
             if (ballX == -9999 && ballY == -9999) {
-                ballX = virtualX + rand() % (boundsWidth - (int)bbox);
-                ballY = virtualY + rand() % (boundsHeight - (int)bbox);
-                ballVX = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
-                ballVY = ((rand() % 2) ? 1 : -1) * (g_speed / 2.0) + 1;
+                ballX = virtualX + rand() % (std::max(1, (int)(boundsWidth - bbox * 2))) + bbox;
+                ballY = virtualY + rand() % (std::max(1, (int)(boundsHeight - bbox * 2))) + bbox;
+                double angle = ((rand() % 360) * 3.1415926535) / 180.0;
+                ballVX = cos(angle) * ballSpeed;
+                ballVY = sin(angle) * ballSpeed;
             }
             ballX += ballVX;
             ballY += ballVY;
             if (ballX < virtualX + bbox) {
-                if (ballX > virtualX) ballVX++; else ballVX = std::abs(ballVX);
+                ballX = virtualX + bbox;
+                ballVX = std::abs(ballVX);
+                ballVY += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
             } else if (ballX > virtualX + boundsWidth - bbox) {
-                if (ballX < virtualX + boundsWidth) ballVX--; else ballVX = -std::abs(ballVX);
+                ballX = virtualX + boundsWidth - bbox;
+                ballVX = -std::abs(ballVX);
+                ballVY += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
             }
             if (ballY < virtualY + bbox) {
-                if (ballY > virtualY) ballVY++; else ballVY = std::abs(ballVY);
+                ballY = virtualY + bbox;
+                ballVY = std::abs(ballVY);
+                ballVX += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
             } else if (ballY > virtualY + boundsHeight - bbox) {
-                if (ballY < virtualY + boundsHeight) ballVY--; else ballVY = -std::abs(ballVY);
+                ballY = virtualY + boundsHeight - bbox;
+                ballVY = -std::abs(ballVY);
+                ballVX += ((rand() % 201) - 100) * 0.01 * (ballSpeed * 0.75);
+            }
+            double currentSpeed = sqrt(ballVX * ballVX + ballVY * ballVY);
+            if (currentSpeed > 0.001) {
+                ballVX = (ballVX / currentSpeed) * ballSpeed;
+                ballVY = (ballVY / currentSpeed) * ballSpeed;
             }
         }
         RunTowards(ballX, ballY);
