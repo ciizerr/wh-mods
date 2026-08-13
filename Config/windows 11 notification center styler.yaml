@@ -35,6 +35,13 @@ controlStyles:
       - Shadow:=
       - BorderBrush:=$border
       - CornerRadius=$r
+  - target: Border#ToastBackgroundBorder
+    styles:
+      - CornerRadius=$r2
+      - Background:=$bg
+      - BorderThickness=1
+      - Shadow:=
+      - BorderBrush=$border
   - target: Border#ToastBackgroundBorder2
     styles:
       - CornerRadius=$r2

@@ -23,32 +23,14 @@ WH Mods Hub is a personal repository where I store my custom mods, configuration
 ```text
 .
 ├── assets/             # Media and audio files
-├── Config/             # Exported configuration presets
+├── Config/             # My Windhawk backup (.json) & configuration presets
 ├── mods/               # Windhawk source files (.wh.cpp)
-├── previews/           # Visual documentation
-└── install-config.ps1  # Automated configuration installer
+└── previews/           # Visual documentation
 ```
 
 ## Configuration
 
-Mod settings and presets are managed in the [`Config/`](./Config) directory. For details on each preset and required process inclusions, see the [Configuration README](./Config/README.md).
-
-### Automated Setup
-
-A PowerShell script is provided to apply configuration presets automatically.
-
-**One-Line Installation**  
-Run the following in an Administrator PowerShell terminal:
-```powershell
-iwr -useb https://raw.githubusercontent.com/ciizerr/wh-mods/main/install-config.ps1 | iex
-```
-
-**Manual Run**
-1. Right-click [`install-config.ps1`](./install-config.ps1).
-2. Select **Run with PowerShell** (Administrator required).
-
-> [!WARNING]
-> The automated installer modifies the Windows Registry. Please review the configuration files before running the script.
+Mod settings and presets are managed in the [`Config/`](./Config) directory, including my complete **Windhawk Backup** (`.json`) and individual mod presets (`.yaml`). You can restore my full setup using Windhawk's native backup feature or import individual settings per mod. For details on each preset and required process inclusions, see the [Configuration README](./Config/README.md).
 
 ## Previews
 
